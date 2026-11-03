@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moataz Games | منصة ألعاب معتز الإلكترونية</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Arabic (Cairo & Tajawal) -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#0a0d14',
+                            card: '#121824',
+                            cardHover: '#1a2336',
+                            purple: '#8b5cf6',
+                            pink: '#ec4899',
+                            cyan: '#06b6d4',
+                            gold: '#f59e0b',
+                            accent: '#6366f1'
+                        }
+                    },
+                    fontFamily: {
+                        cairo: ['Cairo', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #080b11;
+            color: #f3f4f6;
+            overflow-x: hidden;
+        }
+        /* Custom Glowing and Glassmorphism Effects */
+        .glass-panel {
+            background: rgba(18, 24, 36, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glow-purple {
+            box-shadow: 0 0 25px -5px rgba(139, 92, 246, 0.5);
+        }
+        .glow-cyan {
+            box-shadow: 0 0 25px -5px rgba(6, 182, 212, 0.5);
+        }
+        .glow-gold {
+            box-shadow: 0 0 20px -3px rgba(245, 158, 11, 0.4);
+        }
+        .text-gradient {
+            background: linear-gradient(135deg, #a855f7 0%, #3b82f6 50%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .text-gradient-gold {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        /* Hide Scrollbar for custom tabs */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* Smooth Scale Effects */
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-6px) scale(1.02);
+            border-color: rgba(139, 92, 246, 0.4);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-purple-600 selection:text-white">
+
+    <!-- ================= HEADER / NAVBAR ================= -->
+    <header class="sticky top-0 z-50 glass-panel border-b border-gray-800/80 px-4 lg:px-8 py-3">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+            
+            <!-- Logo -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('games')">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-500 to-cyan-400 flex items-center justify-center text-white font-black text-xl shadow-lg glow-purple">
+                    M
+                </div>
+                <div>
+                    <h1 class="text-xl lg:text-2xl font-extrabold tracking-wider text-gradient">Moataz Games</h1>
+                    <p class="text-[10px] text-gray-400 font-medium -mt-1">منصة الألعاب والجوائز اليومية</p>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="flex-1 max-w-md hidden md:block">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="searchInput" oninput="filterGames()" placeholder="ابحث عن لعبه أو تحدي..." 
+                           class="w-full bg-slate-900/90 text-sm text-gray-200 placeholder-gray-500 rounded-full pr-10 pl-4 py-2 border border-gray-700/60 focus:outline-none focus:border-purple-500 transition-all">
+                </div>
+            </div>
+
+            <!-- User Dashboard Widget & Navigation Header -->
+            <div class="flex items-center gap-3">
+                
+                <!-- Daily Reward Button -->
+                <button onclick="claimDailyBonus()" id="dailyBonusBtn" class="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-slate-950 font-bold text-xs lg:text-sm px-3 lg:px-4 py-2 rounded-full transition-all shadow-md glow-gold">
+                    <i class="fa-solid fa-gift text-base animate-bounce"></i>
+                    <span id="dailyBonusBtnText">المكافأة اليومية</span>
+                </button>
+
+                <!-- Coin Balance -->
+                <div class="flex items-center gap-2 bg-slate-900/90 border border-amber-500/30 px-3.5 py-1.5 rounded-full">
+                    <i class="fa-solid fa-coins text-amber-400 text-lg"></i>
+                    <span id="userCoins" class="font-extrabold text-amber-300 text-sm lg:text-base">0</span>
+                </div>
+
+                <!-- Profile Level Badge -->
+                <div class="hidden sm:flex items-center gap-2 bg-slate-900/90 border border-purple-500/30 px-3 py-1.5 rounded-full cursor-pointer hover:border-purple-500 transition-all" onclick="switchTab('profile')">
+                    <div class="w-6 h-6 rounded-full bg-purple-600 text-white text-xs font-bold flex items-center justify-center" id="userLevelBadge">
+                        1
+                    </div>
+                    <span class="text-xs text-purple-300 font-semibold" id="userLevelName">مبتدئ</span>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Mobile Search Input Bar -->
+        <div class="mt-3 md:hidden">
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" id="searchInputMobile" oninput="filterGamesMobile()" placeholder="ابحث عن لعبه..." 
+                       class="w-full bg-slate-900 text-sm text-gray-200 placeholder-gray-500 rounded-full pr-10 pl-4 py-2 border border-gray-800 focus:outline-none focus:border-purple-500">
+            </div>
+        </div>
+    </header>
+
+    <!-- ================= MAIN NAVIGATION TABS ================= -->
+    <nav class="bg-brand-card/90 border-b border-gray-800 px-4 py-2.5 overflow-x-auto no-scrollbar sticky top-[65px] z-40">
+        <div class="max-w-7xl mx-auto flex items-center gap-2 lg:gap-4 min-w-max">
+            <button onclick="switchTab('games')" id="tab-games" class="nav-tab active-tab text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-2 bg-purple-600 text-white transition-all">
+                <i class="fa-solid fa-gamepad"></i> الألعاب الرئيسية
+            </button>
+            <button onclick="switchTab('quests')" id="tab-quests" class="nav-tab text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-2 text-gray-400 hover:text-white hover:bg-slate-800 transition-all">
+                <i class="fa-solid fa-list-check text-cyan-400"></i> المهام والمكافآت
+            </button>
+            <button onclick="switchTab('leaderboard')" id="tab-leaderboard" class="nav-tab text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-2 text-gray-400 hover:text-white hover:bg-slate-800 transition-all">
+                <i class="fa-solid fa-trophy text-amber-400"></i> لوحة المتصدرين
+            </button>
+            <button onclick="switchTab('wallet')" id="tab-wallet" class="nav-tab text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-2 text-gray-400 hover:text-white hover:bg-slate-800 transition-all">
+                <i class="fa-solid fa-wallet text-emerald-400"></i> المحفظة والسحب
+            </button>
+            <button onclick="switchTab('profile')" id="tab-profile" class="nav-tab text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-2 text-gray-400 hover:text-white hover:bg-slate-800 transition-all">
+                <i class="fa-solid fa-user-gear text-indigo-400"></i> حسابي
+            </button>
+            <button onclick="switchTab('admin')" id="tab-admin" class="nav-tab text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-2 text-gray-400 hover:text-white hover:bg-slate-800 transition-all">
+                <i class="fa-solid fa-shield-halved text-rose-400"></i> لوحة التحكم
+            </button>
+        </div>
+    </nav>
+
+    <!-- ================= MAIN CONTAINER ================= -->
+    <main class="max-w-7xl mx-auto px-4 lg:px-8 py-6 flex-1 w-full">
+
+        <!-- ================= TAB 1: GAMES MAIN PAGE ================= -->
+        <section id="section-games" class="tab-content space-y-8">
+            
+            <!-- HERO BANNER -->
+            <div class="relative rounded-3xl overflow-hidden glass-panel border border-purple-500/30 p-6 lg:p-10 bg-gradient-to-r from-purple-950/70 via-brand-card to-indigo-950/80">
+                <div class="absolute -right-10 -top-10 w-64 h-64 bg-purple-600/20 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -left-10 -bottom-10 w-64 h-64 bg-cyan-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
+                    <div class="space-y-4 text-center lg:text-right max-w-2xl">
+                        <div class="inline-flex items-center gap-2 bg-purple-500/20 border border-purple-500/40 text-purple-300 text-xs px-3.5 py-1.5 rounded-full font-semibold">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            أكثر من 1,200 لاعب متصل الآن
+                        </div>
+                        <h2 class="text-3xl lg:text-5xl font-black text-white leading-tight">
+                            العب، اجمع النقاط ونافس <span class="text-gradient">أفضل اللاعبين!</span>
+                        </h2>
+                        <p class="text-gray-300 text-sm lg:text-base leading-relaxed">
+                            مرحباً بك في منصة <strong class="text-white">Moataz Games</strong>. العب مجموعة متنوعة من الألعاب والتحديات السريعة بدون تحميل، احصل على النقاط اليومية وارتقِ بمستواك على لوحة الصدارة.
+                        </p>
+                        <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2">
+                            <button onclick="scrollToGames()" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold px-8 py-3.5 rounded-2xl transition-all shadow-lg glow-purple flex items-center gap-2">
+                                <i class="fa-solid fa-play"></i> ابدأ اللعب الآن
+                            </button>
+                            <button onclick="switchTab('quests')" class="bg-slate-800/80 hover:bg-slate-700 text-gray-200 border border-gray-700 font-bold px-6 py-3.5 rounded-2xl transition-all flex items-center gap-2">
+                                <i class="fa-solid fa-bullseye text-amber-400"></i> المهام اليومية
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Hero Visual Card / Jackpot Counter -->
+                    <div class="bg-slate-900/90 border border-amber-500/30 rounded-2xl p-6 text-center w-full lg:w-80 shadow-2xl relative glow-gold">
+                        <div class="text-xs font-bold text-amber-400 tracking-widest uppercase mb-1">الجائزة الكبرى المتاحة</div>
+                        <div class="text-3xl font-black text-gradient-gold my-2" id="jackpotCounter">150,000 COINS</div>
+                        <p class="text-xs text-gray-400 mb-4">يتم توزيع جوائز أسبوعية على أعلى 3 متصدرين</p>
+                        <div class="w-full bg-gray-800 h-2 rounded-full overflow-hidden mb-2">
+                            <div class="bg-gradient-to-r from-amber-500 to-yellow-300 h-full w-3/4 animate-pulse"></div>
+                        </div>
+                        <div class="text-[11px] text-gray-400 flex justify-between">
+                            <span>نسبة التكافئ الحالية</span>
+                            <span class="text-amber-400 font-bold">75%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADVERTISEMENT SLOT PLACEHOLDER (NON-INTRUSIVE) -->
+            <div class="w-full bg-slate-900/60 border border-gray-800 rounded-2xl p-4 text-center">
+                <div class="text-[10px] text-gray-500 mb-1">مساحة إعلانية داعمة للمكافآت (Google AdSense Ready)</div>
+                <div class="h-16 rounded-xl bg-slate-950/80 border border-dashed border-gray-700/60 flex items-center justify-center text-xs text-gray-400 gap-2">
+                    <i class="fa-regular fa-rectangle-ad text-lg text-purple-400"></i>
+                    <span>إعلانات ممتازة تدعم تقديم جوائز مجانية للاعبين بدون تكلفة</span>
+                </div>
+            </div>
+
+            <!-- FEATURED & ALL GAMES SECTION -->
+            <div id="gamesContainer" class="space-y-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-2xl font-black text-white flex items-center gap-2">
+                            <i class="fa-solid fa-fire text-rose-500"></i> مكتبة الألعاب المتاحة
+                        </h3>
+                        <p class="text-xs text-gray-400">اختر لعبة وابدأ التحدي لجمع النقاط مباشرة</p>
+                    </div>
+                </div>
+
+                <!-- GAMES GRID -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="gamesGrid">
+                    
+                    <!-- GAME 1: Fast Clicker -->
+                    <div class="game-card bg-brand-card rounded-2xl border border-gray-800 overflow-hidden card-hover flex flex-col justify-between" data-name="النقر السريع Fast Clicker">
+                        <div>
+                            <div class="h-40 bg-gradient-to-br from-purple-900 via-indigo-900 to-slate-900 relative flex items-center justify-center p-4">
+                                <i class="fa-solid fa-hand-pointer text-6xl text-purple-400 opacity-80 group-hover:scale-110 transition-transform"></i>
+                                <span class="absolute top-3 right-3 bg-purple-600/80 text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-purple-400/30">سرعة وحركة</span>
+                                <span class="absolute bottom-3 left-3 bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold px-2.5 py-1 rounded-full">
+                                    <i class="fa-solid fa-coins text-amber-400 ml-1"></i> حتى 50 نقطة
+                                </span>
+                            </div>
+                            <div class="p-5 space-y-2">
+                                <h4 class="text-lg font-bold text-white">تحدي النقر السريع</h4>
+                                <p class="text-xs text-gray-400 leading-relaxed">انقر بأكبر عدد ممكن خلال 10 ثوانٍ للحصول على النقاط بناءً على سرعتك!</p>
+                            </div>
+                        </div>
+                        <div class="p-5 pt-0">
+                            <button onclick="openGame('clicker')" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-md">
+                                <i class="fa-solid fa-play text-xs"></i> العب الآن
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- GAME 2: Number Guessing -->
+                    <div class="game-card bg-brand-card rounded-2xl border border-gray-800 overflow-hidden card-hover flex flex-col justify-between" data-name="تخمين الرقم Number Guessing">
+                        <div>
+                            <div class="h-40 bg-gradient-to-br from-blue-900 via-cyan-900 to-slate-900 relative flex items-center justify-center p-4">
+                                <i class="fa-solid fa-arrow-down-up-across-line text-6xl text-cyan-400 opacity-80"></i>
+                                <span class="absolute top-3 right-3 bg-cyan-600/80 text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-cyan-400/30">ذكاء وتخمين</span>
+                                <span class="absolute bottom-3 left-3 bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold px-2.5 py-1 rounded-full">
+                                    <i class="fa-solid fa-coins text-amber-400 ml-1"></i> 30 نقطة
+                                </span>
+                            </div>
+                            <div class="p-5 space-y-2">
+                                <h4 class="text-lg font-bold text-white">تخمين الرقم الخفي</h4>
+                                <p class="text-xs text-gray-400 leading-relaxed">خَمّن الرقم الصحيح بين 1 و100 بأقل عدد محاولات ممكنة باستعمال التلميحات.</p>
+                            </div>
+                        </div>
+                        <div class="p-5 pt-0">
+                            <button onclick="openGame('guess')" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-md">
+                                <i class="fa-solid fa-play text-xs"></i> العب الآن
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- GAME 3: Reaction Speed Test -->
+                    <div class="game-card bg-brand-card rounded-2xl border border-gray-800 overflow-hidden card-hover flex flex-col justify-between" data-name="اختبار سرعة الاستجابة Reaction Speed">
+                        <div>
+                            <div class="h-40 bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 relative flex items-center justify-center p-4">
+                                <i class="fa-solid fa-stopwatch text-6xl text-emerald-400 opacity-80"></i>
+                                <span class="absolute top-3 right-3 bg-emerald-600/80 text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-emerald-400/30">سرعة بديهة</span>
+                                <span class="absolute bottom-3 left-3 bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold px-2.5 py-1 rounded-full">
+                                    <i class="fa-solid fa-coins text-amber-400 ml-1"></i> حتى 40 نقطة
+                                </span>
+                            </div>
+                            <div class="p-5 space-y-2">
+                                <h4 class="text-lg font-bold text-white">اختبار سرعة الاستجابة</h4>
+                                <p class="text-xs text-gray-400 leading-relaxed">انقر فور تحول الشاشة للون الأخضر وقس زمن استجابتك بالمللي ثانية.</p>
+                            </div>
+                        </div>
+                        <div class="p-5 pt-0">
+                            <button onclick="openGame('reaction')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-md">
+                                <i class="fa-solid fa-play text-xs"></i> العب الآن
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- GAME 4: Color Match -->
+                    <div class="game-card bg-brand-card rounded-2xl border border-gray-800 overflow-hidden card-hover flex flex-col justify-between" data-name="مطابقة الألوان Color Match">
+                        <div>
+                            <div class="h-40 bg-gradient-to-br from-pink-900 via-rose-900 to-slate-900 relative flex items-center justify-center p-4">
+                                <i class="fa-solid fa-palette text-6xl text-pink-400 opacity-80"></i>
+                                <span class="absolute top-3 right-3 bg-pink-600/80 text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-pink-400/30">تركيز</span>
+                                <span class="absolute bottom-3 left-3 bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold px-2.5 py-1 rounded-full">
+                                    <i class="fa-solid fa-coins text-amber-400 ml-1"></i> 35 نقطة
+                                </span>
+                            </div>
+                            <div class="p-5 space-y-2">
+                                <h4 class="text-lg font-bold text-white">مطابقة الألوان والنصوص</h4>
+                                <p class="text-xs text-gray-400 leading-relaxed">حدد هل اسم اللون يطابق اللون المعروض بصرياً أم لا قبل انتهاء الوقت.</p>
+                            </div>
+                        </div>
+                        <div class="p-5 pt-0">
+                            <button onclick="openGame('color')" class="w-full bg-pink-600 hover:bg-pink-500 text-white font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-md">
+                                <i class="fa-solid fa-play text-xs"></i> العب الآن
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- GAME 5: Fast Math -->
+                    <div class="game-card bg-brand-card rounded-2xl border border-gray-800 overflow-hidden card-hover flex flex-col justify-between" data-name="الحساب السريع Fast Math">
+                        <div>
+                            <div class="h-40 bg-gradient-to-br from-amber-900 via-orange-900 to-slate-900 relative flex items-center justify-center p-4">
+                                <i class="fa-solid fa-calculator text-6xl text-amber-400 opacity-80"></i>
+                                <span class="absolute top-3 right-3 bg-amber-600/80 text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-amber-400/30">رياضيات</span>
+                                <span class="absolute bottom-3 left-3 bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold px-2.5 py-1 rounded-full">
+                                    <i class="fa-solid fa-coins text-amber-400 ml-1"></i> حتى 60 نقطة
+                                </span>
+                            </div>
+                            <div class="p-5 space-y-2">
+                                <h4 class="text-lg font-bold text-white">تحدي الحساب السريع</h4>
+                                <p class="text-xs text-gray-400 leading-relaxed">حل أكبر عدد من المسائل الحسابية في أقصر وقت ممكن لاختبار ذكائك.</p>
+                            </div>
+                        </div>
+                        <div class="p-5 pt-0">
+                            <button onclick="openGame('math')" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-md">
+                                <i class="fa-solid fa-play text-xs"></i> العب الآن
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- GAME 6: Memory Game -->
+                    <div class="game-card bg-brand-card rounded-2xl border border-gray-800 overflow-hidden card-hover flex flex-col justify-between" data-name="لعبة الذاكرة Memory Game">
+                        <div>
+                            <div class="h-40 bg-gradient-to-br from-indigo-900 via-purple-950 to-slate-900 relative flex items-center justify-center p-4">
+                                <i class="fa-solid fa-brain text-6xl text-indigo-400 opacity-80"></i>
+                                <span class="absolute top-3 right-3 bg-indigo-600/80 text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-indigo-400/30">ذاكرة وقوة ملاحظة</span>
+                                <span class="absolute bottom-3 left-3 bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold px-2.5 py-1 rounded-full">
+                                    <i class="fa-solid fa-coins text-amber-400 ml-1"></i> 45 نقطة
+                                </span>
+                            </div>
+                            <div class="p-5 space-y-2">
+                                <h4 class="text-lg font-bold text-white">تحدي كروت الذاكرة</h4>
+                                <p class="text-xs text-gray-400 leading-relaxed">اقلب الكروت واكشف الصور المتطابقة بأسرع وقت وأقل عدد محاولات.</p>
+                            </div>
+                        </div>
+                        <div class="p-5 pt-0">
+                            <button onclick="openGame('memory')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-md">
+                                <i class="fa-solid fa-play text-xs"></i> العب الآن
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 2: QUESTS & REWARDS ================= -->
+        <section id="section-quests" class="tab-content hidden space-y-6">
+            <div class="glass-panel rounded-3xl p-6 lg:p-8 border border-gray-800">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-2xl font-black text-white flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-cyan-400"></i> المهام والإنجازات اليومية
+                        </h3>
+                        <p class="text-xs text-gray-400">أكمل التحديات اليومية للحصول على مكافآت نقاط إضافية</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4" id="questsList">
+                    <!-- Quests populated dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 3: LEADERBOARD ================= -->
+        <section id="section-leaderboard" class="tab-content hidden space-y-6">
+            <div class="glass-panel rounded-3xl p-6 lg:p-8 border border-gray-800">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-2xl font-black text-white flex items-center gap-2">
+                            <i class="fa-solid fa-trophy text-amber-400"></i> لوحة المتصدرين العامة
+                        </h3>
+                        <p class="text-xs text-gray-400">أفضل اللاعبين الجمعاً للنقاط هذا الأسبوع</p>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-sm">
+                        <thead class="bg-slate-900/80 text-gray-400 text-xs uppercase border-b border-gray-800">
+                            <tr>
+                                <th class="p-4">الترتيب</th>
+                                <th class="p-4">اللاعب</th>
+                                <th class="p-4">المستوى</th>
+                                <th class="p-4">إجمالي النقاط</th>
+                                <th class="p-4">الحالة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboardTbody" class="divide-y divide-gray-800/60">
+                            <!-- Populated via Javascript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 4: WALLET & WITHDRAWAL ================= -->
+        <section id="section-wallet" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Wallet Overview -->
+                <div class="lg:col-span-1 glass-panel rounded-3xl p-6 border border-gray-800 space-y-6">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-wallet text-emerald-400"></i> رصيدك الحالي
+                    </h3>
+                    
+                    <div class="bg-gradient-to-br from-emerald-950/60 to-slate-900 border border-emerald-500/30 rounded-2xl p-6 text-center space-y-2">
+                        <div class="text-xs text-emerald-400 font-semibold">إجمالي النقاط القابلة للاستبدال</div>
+                        <div class="text-4xl font-black text-white" id="walletCoins">0</div>
+                        <p class="text-[11px] text-gray-400">10,000 نقطة = 10 USDT (معدل تحويل افتراضي للاستبدال)</p>
+                    </div>
+
+                    <div class="space-y-3 text-xs text-gray-300">
+                        <div class="flex justify-between border-b border-gray-800 pb-2">
+                            <span>الحد الأدنى للسحب:</span>
+                            <span class="font-bold text-amber-400">10,000 نقطة</span>
+                        </div>
+                        <div class="flex justify-between border-b border-gray-800 pb-2">
+                            <span>رسوم المعالجة:</span>
+                            <span class="font-bold text-emerald-400">0%</span>
+                        </div>
+                        <div class="flex justify-between pb-1">
+                            <span>طرق السحب المتاحة:</span>
+                            <span class="font-bold text-cyan-400">USDT (TRC20), Bitcoin</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/80 p-3.5 rounded-xl border border-gray-800 text-[11px] text-gray-400 leading-relaxed">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-400 ml-1"></i>
+                        تنفيذاً لشروط الشفافية: النقاط هي مكافآت ألعاب مجانية داخل المنصة. نظام طلبات السحب هو نظام توثيقي مجهز للتسليم المباشر عبر المسؤولين عند بلوغ الحد الأدنى.
+                    </div>
+                </div>
+
+                <!-- Withdrawal Form & History -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="glass-panel rounded-3xl p-6 border border-gray-800 space-y-4">
+                        <h3 class="text-lg font-bold text-white">تقديم طلب استبدال النقاط</h3>
+                        
+                        <form id="withdrawForm" onsubmit="handleWithdraw(event)" class="space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">طريقة السحب</label>
+                                    <select id="withdrawMethod" class="w-full bg-slate-900 border border-gray-700 text-sm text-gray-200 rounded-xl p-3 focus:outline-none focus:border-emerald-500">
+                                        <option value="USDT-TRC20">USDT (Network TRC20)</option>
+                                        <option value="BTC">Bitcoin (BTC)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">عدد النقاط للتحويل</label>
+                                    <input type="number" id="withdrawAmount" min="10000" placeholder="الحد الأدنى 10000" required 
+                                           class="w-full bg-slate-900 border border-gray-700 text-sm text-gray-200 rounded-xl p-3 focus:outline-none focus:border-emerald-500">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">عنوان المحفظة الرقمية الخاصة بك</label>
+                                <input type="text" id="walletAddress" placeholder="أدخل عنوان المحفظة بدقة..." required 
+                                       class="w-full bg-slate-900 border border-gray-700 text-sm text-gray-200 rounded-xl p-3 focus:outline-none focus:border-emerald-500">
+                            </div>
+
+                            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition-all shadow-md">
+                                إرسال طلب السحب
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- History -->
+                    <div class="glass-panel rounded-3xl p-6 border border-gray-800 space-y-4">
+                        <h3 class="text-lg font-bold text-white">سجل طلبات السحب</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right text-xs">
+                                <thead class="bg-slate-900 text-gray-400 border-b border-gray-800">
+                                    <tr>
+                                        <th class="p-3">التاريخ</th>
+                                        <th class="p-3">الطريقة</th>
+                                        <th class="p-3">النقاط</th>
+                                        <th class="p-3">الحالة</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="withdrawHistoryTbody" class="divide-y divide-gray-800/60">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= TAB 5: PROFILE & ACCOUNTS ================= -->
+        <section id="section-profile" class="tab-content hidden space-y-6">
+            <div class="max-w-3xl mx-auto glass-panel rounded-3xl p-6 lg:p-8 border border-gray-800 space-y-6">
+                
+                <div class="flex items-center gap-4 border-b border-gray-800 pb-6">
+                    <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-purple-600 to-cyan-500 flex items-center justify-center text-3xl font-black text-white shadow-lg">
+                        <i class="fa-solid fa-user-ninja"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-black text-white" id="profileName">لاعب Moataz</h3>
+                        <p class="text-xs text-gray-400" id="profileID">معرف اللاعب: #84920</p>
+                        <div class="mt-2 inline-block bg-purple-500/20 text-purple-300 border border-purple-500/40 text-xs px-3 py-1 rounded-full font-bold" id="profileLevelTitle">
+                            المستوى 1 (مبتدئ)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div class="bg-slate-900/80 p-4 rounded-2xl border border-gray-800 text-center">
+                        <div class="text-xs text-gray-400">الألعاب المكتملة</div>
+                        <div class="text-2xl font-black text-white mt-1" id="statGamesPlayed">0</div>
+                    </div>
+                    <div class="bg-slate-900/80 p-4 rounded-2xl border border-gray-800 text-center">
+                        <div class="text-xs text-gray-400">إجمالي النقاط</div>
+                        <div class="text-2xl font-black text-amber-400 mt-1" id="statTotalCoins">0</div>
+                    </div>
+                    <div class="bg-slate-900/80 p-4 rounded-2xl border border-gray-800 text-center">
+                        <div class="text-xs text-gray-400">نقاط الخبرة XP</div>
+                        <div class="text-2xl font-black text-purple-400 mt-1" id="statXP">0</div>
+                    </div>
+                    <div class="bg-slate-900/80 p-4 rounded-2xl border border-gray-800 text-center">
+                        <div class="text-xs text-gray-400">أيام التتابع</div>
+                        <div class="text-2xl font-black text-emerald-400 mt-1" id="statStreak">1 يوم</div>
+                    </div>
+                </div>
+
+                <!-- XP Progress Bar -->
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs font-bold">
+                        <span class="text-gray-300">التقدم للمستوى التالي</span>
+                        <span class="text-purple-400" id="xpText">0 / 100 XP</span>
+                    </div>
+                    <div class="w-full bg-slate-900 h-3 rounded-full overflow-hidden border border-gray-800">
+                        <div id="xpProgressBar" class="bg-gradient-to-r from-purple-600 to-cyan-400 h-full w-0 transition-all duration-500"></div>
+                    </div>
+                </div>
+
+                <!-- Local Storage Reset Option -->
+                <div class="pt-4 border-t border-gray-800 flex justify-between items-center text-xs">
+                    <span class="text-gray-400">حفظ البيانات: يتم تتبّع تقدمك تلقائياً على هذا المتصفح.</span>
+                    <button onclick="resetAccountData()" class="text-rose-400 hover:underline">إعادة ضبط الحساب</button>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= TAB 6: ADMIN PANEL PREVIEW ================= -->
+        <section id="section-admin" class="tab-content hidden space-y-6">
+            <div class="glass-panel rounded-3xl p-6 lg:p-8 border border-gray-800 space-y-6">
+                <div class="flex items-center justify-between border-b border-gray-800 pb-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-shield-halved text-rose-500"></i> لوحة إدارة منصة Moataz Games
+                        </h3>
+                        <p class="text-xs text-gray-400">نظام المراقبة والتحكم بالطلبات وإحداثيات الموقع</p>
+                    </div>
+                    <span class="bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold px-3 py-1 rounded-full">وضع المسؤول</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-slate-900 p-4 rounded-2xl border border-gray-800">
+                        <div class="text-xs text-gray-400">إجمالي مستخدمي المنصة اليوم</div>
+                        <div class="text-2xl font-black text-white mt-1">1,248</div>
+                    </div>
+                    <div class="bg-slate-900 p-4 rounded-2xl border border-gray-800">
+                        <div class="text-xs text-gray-400">طلبات السحب المعلقة</div>
+                        <div class="text-2xl font-black text-amber-400 mt-1" id="adminPendingWithdraws">0</div>
+                    </div>
+                    <div class="bg-slate-900 p-4 rounded-2xl border border-gray-800">
+                        <div class="text-xs text-gray-400">الألعاب النشطة</div>
+                        <div class="text-2xl font-black text-emerald-400 mt-1">6 ألعاب</div>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <h4 class="text-sm font-bold text-gray-200">إدارة طلبات السحب المستلمة:</h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-slate-900 text-gray-400 border-b border-gray-800">
+                                <tr>
+                                    <th class="p-3">المعرف</th>
+                                    <th class="p-3">اللاعب</th>
+                                    <th class="p-3">المبلغ المطلوبة</th>
+                                    <th class="p-3">العنوان</th>
+                                    <th class="p-3">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminWithdrawTable" class="divide-y divide-gray-800/60">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ================= GAME MODAL CONTAINER (FOR ACTIVE PLAYABLE GAMES) ================= -->
+    <div id="gameModal" class="fixed inset-0 z-50 hidden bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-brand-card border border-gray-700/80 rounded-3xl max-w-2xl w-full p-6 relative shadow-2xl space-y-6">
+            
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between border-b border-gray-800 pb-4">
+                <div class="flex items-center gap-3">
+                    <div id="modalGameIcon" class="text-2xl text-purple-400"></div>
+                    <h3 id="modalGameTitle" class="text-xl font-bold text-white">عنوان اللعبة</h3>
+                </div>
+                <button onclick="closeGameModal()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-rose-600 text-gray-400 hover:text-white flex items-center justify-center transition-all">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Game Display Area -->
+            <div id="modalGameBody" class="min-h-[280px] flex flex-col items-center justify-center text-center">
+                <!-- Dynamic Game HTML Content Injected Here -->
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ================= CUSTOM ALERT / NOTIFICATION TOAST ================= -->
+    <div id="toastNotification" class="fixed bottom-6 left-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 max-w-sm bg-slate-900 border border-purple-500 text-white p-4 rounded-2xl shadow-2xl flex items-center gap-3">
+        <div id="toastIcon" class="text-xl text-amber-400"><i class="fa-solid fa-bell"></i></div>
+        <div class="text-xs font-semibold" id="toastMessage">إشعار جديد!</div>
+    </div>
+
+    <!-- ================= FOOTER ================= -->
+    <footer class="glass-panel border-t border-gray-800 mt-12 py-8 px-4 text-center text-xs text-gray-400 space-y-3">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <span class="font-extrabold text-gradient text-base">Moataz Games</span>
+                <span>&copy; 2026 جميع الحقوق محفوظة</span>
+            </div>
+            <div class="flex items-center gap-4 text-gray-400">
+                <a href="#" class="hover:text-purple-400 transition-colors">الشروط والأحكام</a>
+                <a href="#" class="hover:text-purple-400 transition-colors">سياسة الخصوصية</a>
+                <a href="#" class="hover:text-purple-400 transition-colors">الدعم الفني</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ================= JAVASCRIPT LOGIC ================= -->
+    <script>
+        /* ================= STATE MANAGEMENT ================= */
+        let state = {
+            coins: 0,
+            xp: 0,
+            level: 1,
+            gamesPlayed: 0,
+            lastDailyClaim: null,
+            withdrawHistory: [],
+            quests: [
+                { id: 1, title: 'لعب أي لعبة مرتين', goal: 2, current: 0, reward: 50, claimed: false },
+                { id: 2, title: 'جمع 100 نقطة', goal: 100, current: 0, reward: 80, claimed: false },
+                { id: 3, title: 'إكمال 5 تحديات', goal: 5, current: 0, reward: 150, claimed: false }
+            ]
+        };
+
+        // Simulated Leaderboard Data
+        const defaultLeaderboard = [
+            { name: "أحمد السوري", level: 12, coins: 45000, status: "🥇 المركز الأول" },
+            { name: "عمر خالد", level: 9, coins: 32000, status: "🥈 المركز الثاني" },
+            { name: "سارة محمد", level: 8, coins: 28500, status: "🥉 المركز الثالث" },
+            { name: "يوسف العراقي", level: 6, coins: 19000, status: "متنافس" },
+            { name: "كريم الكينج", level: 5, coins: 14200, status: "متنافس" }
+        ];
+
+        /* ================= INITIALIZATION ================= */
+        window.onload = function() {
+            loadUserData();
+            updateUI();
+            renderQuests();
+            renderLeaderboard();
+            renderWithdrawHistory();
+            renderAdminPanel();
+            checkDailyBonusState();
+        };
+
+        function loadUserData() {
+            const saved = localStorage.getItem('moataz_games_user');
+            if (saved) {
+                try {
+                    state = { ...state, ...JSON.parse(saved) };
+                } catch(e) { console.error(e); }
+            }
+        }
+
+        function saveUserData() {
+            localStorage.setItem('moataz_games_user', JSON.stringify(state));
+            updateUI();
+        }
+
+        /* ================= UI UPDATES & NAVIGATION ================= */
+        function updateUI() {
+            // Coins
+            document.getElementById('userCoins').innerText = state.coins.toLocaleString();
+            document.getElementById('walletCoins').innerText = state.coins.toLocaleString();
+            document.getElementById('statTotalCoins').innerText = state.coins.toLocaleString();
+
+            // Stats
+            document.getElementById('statGamesPlayed').innerText = state.gamesPlayed;
+            document.getElementById('statXP').innerText = state.xp;
+
+            // Level Logic
+            state.level = Math.floor(state.xp / 100) + 1;
+            document.getElementById('userLevelBadge').innerText = state.level;
+            
+            let levelTitle = "مبتدئ";
+            if(state.level >= 3) levelTitle = "محترف";
+            if(state.level >= 7) levelTitle = "أسطورة";
+            if(state.level >= 12) levelTitle = "بطل المنصة";
+
+            document.getElementById('userLevelName').innerText = levelTitle;
+            document.getElementById('profileLevelTitle').innerText = `المستوى ${state.level} (${levelTitle})`;
+
+            // XP Progress Bar
+            const currentLevelXP = state.xp % 100;
+            document.getElementById('xpText').innerText = `${currentLevelXP} / 100 XP`;
+            document.getElementById('xpProgressBar').style.width = `${currentLevelXP}%`;
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-tab').forEach(el => {
+                el.classList.remove('bg-purple-600', 'text-white');
+                el.classList.add('text-gray-400');
+            });
+
+            const selectedSection = document.getElementById(`section-${tabId}`);
+            if(selectedSection) selectedSection.classList.remove('hidden');
+
+            const selectedTabBtn = document.getElementById(`tab-${tabId}`);
+            if(selectedTabBtn) {
+                selectedTabBtn.classList.add('bg-purple-600', 'text-white');
+                selectedTabBtn.classList.remove('text-gray-400');
+            }
+        }
+
+        function showToast(message, iconClass = "fa-solid fa-circle-check text-emerald-400") {
+            const toast = document.getElementById('toastNotification');
+            document.getElementById('toastMessage').innerText = message;
+            document.getElementById('toastIcon').innerHTML = `<i class="${iconClass}"></i>`;
+
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 3500);
+        }
+
+        function scrollToGames() {
+            document.getElementById('gamesContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        /* ================= GAME SEARCH FILTER ================= */
+        function filterGames() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('.game-card');
+            cards.forEach(card => {
+                const name = card.getAttribute('data-name').toLowerCase();
+                card.style.display = name.includes(query) ? 'flex' : 'none';
+            });
+        }
+
+        function filterGamesMobile() {
+            const query = document.getElementById('searchInputMobile').value.toLowerCase();
+            const cards = document.querySelectorAll('.game-card');
+            cards.forEach(card => {
+                const name = card.getAttribute('data-name').toLowerCase();
+                card.style.display = name.includes(query) ? 'flex' : 'none';
+            });
+        }
+
+        /* ================= REWARD & QUESTS SYSTEM ================= */
+        function addCoinsAndXP(coinsEarned, xpEarned) {
+            state.coins += coinsEarned;
+            state.xp += xpEarned;
+            state.gamesPlayed += 1;
+
+            // Quest progress update
+            state.quests.forEach(q => {
+                if(q.id === 1) q.current += 1;
+                if(q.id === 2) q.current += coinsEarned;
+                if(q.id === 3) q.current += 1;
+            });
+
+            saveUserData();
+            renderQuests();
+            showToast(`مبروك! حصلت على ${coinsEarned} نقطة و ${xpEarned} XP!`, "fa-solid fa-coins text-amber-400");
+        }
+
+        function checkDailyBonusState() {
+            const btnText = document.getElementById('dailyBonusBtnText');
+            const now = Date.now();
+            if (state.lastDailyClaim && (now - state.lastDailyClaim < 86400000)) {
+                btnText.innerText = "تم المطالبة";
+                document.getElementById('dailyBonusBtn').classList.add('opacity-60', 'cursor-not-allowed');
+            } else {
+                btnText.innerText = "المكافأة اليومية";
+                document.getElementById('dailyBonusBtn').classList.remove('opacity-60', 'cursor-not-allowed');
+            }
+        }
+
+        function claimDailyBonus() {
+            const now = Date.now();
+            if (state.lastDailyClaim && (now - state.lastDailyClaim < 86400000)) {
+                showToast("لقد أخذت مكافأتك اليومية بالفعل! عد غداً.", "fa-solid fa-clock text-amber-400");
+                return;
+            }
+            state.lastDailyClaim = now;
+            addCoinsAndXP(200, 50);
+            checkDailyBonusState();
+            showToast("تم إضافة 200 نقطة مكافأة يومية لمتجرك!", "fa-solid fa-gift text-amber-400");
+        }
+
+        function renderQuests() {
+            const container = document.getElementById('questsList');
+            container.innerHTML = '';
+
+            state.quests.forEach(q => {
+                const isReady = q.current >= q.goal && !q.claimed;
+                const percent = Math.min(100, Math.floor((q.current / q.goal) * 100));
+
+                container.innerHTML += `
+                    <div class="bg-slate-900 border border-gray-800 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div class="space-y-1 w-full sm:w-auto">
+                            <h4 class="font-bold text-white text-sm">${q.title}</h4>
+                            <div class="flex items-center gap-2 text-xs text-gray-400">
+                                <span>التقدم: ${q.current}/${q.goal}</span>
+                                <span>•</span>
+                                <span class="text-amber-400 font-semibold"><i class="fa-solid fa-coins"></i> +${q.reward} نقطة</span>
+                            </div>
+                            <div class="w-full sm:w-48 bg-gray-800 h-2 rounded-full overflow-hidden mt-1">
+                                <div class="bg-purple-500 h-full" style="width: ${percent}%"></div>
+                            </div>
+                        </div>
+                        <button onclick="claimQuestReward(${q.id})" ${!isReady ? 'disabled' : ''} 
+                                class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold text-xs transition-all ${
+                                    q.claimed ? 'bg-gray-800 text-gray-500 cursor-default' :
+                                    isReady ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 glow-gold' : 'bg-slate-800 text-gray-400 cursor-not-allowed'
+                                }">
+                            ${q.claimed ? 'تم الاستلام' : isReady ? 'استلام المكافأة' : 'قيد الإنجاز'}
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        function claimQuestReward(questId) {
+            const quest = state.quests.find(q => q.id === questId);
+            if (quest && quest.current >= quest.goal && !quest.claimed) {
+                quest.claimed = true;
+                addCoinsAndXP(quest.reward, 30);
+                renderQuests();
+            }
+        }
+
+        /* ================= LEADERBOARD ================= */
+        function renderLeaderboard() {
+            const tbody = document.getElementById('leaderboardTbody');
+            tbody.innerHTML = '';
+
+            // Combine user into leaderboard
+            let list = [...defaultLeaderboard];
+            list.push({ name: "حسابك الشخصي", level: state.level, coins: state.coins, status: "أنت" });
+            list.sort((a, b) => b.coins - a.coins);
+
+            list.forEach((item, index) => {
+                const isUser = item.status === "أنت";
+                tbody.innerHTML += `
+                    <tr class="${isUser ? 'bg-purple-900/30 font-bold border-l-4 border-purple-500' : 'hover:bg-slate-900/40'}">
+                        <td class="p-4">${index === 0 ? '👑 1' : index === 1 ? '🥈 2' : index === 2 ? '🥉 3' : index + 1}</td>
+                        <td class="p-4 flex items-center gap-2">
+                            <span class="${isUser ? 'text-purple-300' : 'text-gray-200'}">${item.name}</span>
+                        </td>
+                        <td class="p-4 text-xs text-purple-400">مستوى ${item.level}</td>
+                        <td class="p-4 text-amber-300 font-bold">${item.coins.toLocaleString()}</td>
+                        <td class="p-4 text-xs text-gray-400">${item.status}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        /* ================= WALLET & WITHDRAW ================= */
+        function handleWithdraw(e) {
+            e.preventDefault();
+            const amount = parseInt(document.getElementById('withdrawAmount').value);
+            const method = document.getElementById('withdrawMethod').value;
+            const address = document.getElementById('walletAddress').value;
+
+            if (amount > state.coins) {
+                showToast("عفواً! رصيدك غير كافٍ لإتمام طلب السحب.", "fa-solid fa-triangle-exclamation text-rose-500");
+                return;
+            }
+
+            if (amount < 10000) {
+                showToast("الحد الأدنى للسحب هو 10,000 نقطة.", "fa-solid fa-circle-info text-amber-400");
+                return;
+            }
+
+            state.coins -= amount;
+            const req = {
+                id: '#' + Math.floor(100000 + Math.random() * 900000),
+                date: new Date().toLocaleDateString('ar-EG'),
+                method: method,
+                amount: amount,
+                address: address,
+                status: 'قيد المراجعة'
+            };
+
+            state.withdrawHistory.unshift(req);
+            saveUserData();
+            renderWithdrawHistory();
+            renderAdminPanel();
+            document.getElementById('withdrawForm').reset();
+            showToast("تم تقديم طلب السحب بنجاح! سيتم مراجعته من الإدارة.", "fa-solid fa-circle-check text-emerald-400");
+        }
+
+        function renderWithdrawHistory() {
+            const tbody = document.getElementById('withdrawHistoryTbody');
+            tbody.innerHTML = '';
+
+            if (state.withdrawHistory.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-500">لا يوجد طلبات سحب سابقة</td></tr>`;
+                return;
+            }
+
+            state.withdrawHistory.forEach(item => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-3 text-gray-300">${item.date}</td>
+                        <td class="p-3 font-semibold text-cyan-400">${item.method}</td>
+                        <td class="p-3 text-amber-300 font-bold">${item.amount.toLocaleString()}</td>
+                        <td class="p-3"><span class="bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full text-[10px]">${item.status}</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        /* ================= ADMIN PANEL PREVIEW ================= */
+        function renderAdminPanel() {
+            const tbody = document.getElementById('adminWithdrawTable');
+            tbody.innerHTML = '';
+
+            document.getElementById('adminPendingWithdraws').innerText = state.withdrawHistory.filter(w => w.status === 'قيد المراجعة').length;
+
+            if (state.withdrawHistory.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">لا يوجد طلبات سحب معلقة</td></tr>`;
+                return;
+            }
+
+            state.withdrawHistory.forEach((item, index) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-3 font-mono text-gray-400">${item.id}</td>
+                        <td class="p-3 text-white">لاعب Moataz</td>
+                        <td class="p-3 text-amber-300 font-bold">${item.amount} نقطة</td>
+                        <td class="p-3 text-gray-400 font-mono text-[10px]">${item.address}</td>
+                        <td class="p-3 flex gap-2">
+                            <button onclick="approveWithdraw(${index})" class="bg-emerald-600 text-white px-2 py-1 rounded text-[10px]">موافقة</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function approveWithdraw(index) {
+            state.withdrawHistory[index].status = 'تم الموافقة والتحويل';
+            saveUserData();
+            renderWithdrawHistory();
+            renderAdminPanel();
+            showToast("تم الموافقة على الطلب بنجاح (محاكاة مدير)", "fa-solid fa-check text-emerald-400");
+        }
+
+        function resetAccountData() {
+            if (confirm("هل أنت تأكد من إعادة ضبط كافة البيانات والتقدم على هذا المتصفح؟")) {
+                localStorage.removeItem('moataz_games_user');
+                location.reload();
+            }
+        }
+
+        /* ================= FULLY FUNCTIONAL MINI GAMES SYSTEM ================= */
+        function openGameModal(title, iconHtml, gameBodyHtml) {
+            document.getElementById('modalGameTitle').innerText = title;
+            document.getElementById('modalGameIcon').innerHTML = iconHtml;
+            document.getElementById('modalGameBody').innerHTML = gameBodyHtml;
+            document.getElementById('gameModal').classList.remove('hidden');
+        }
+
+        function closeGameModal() {
+            document.getElementById('gameModal').classList.add('hidden');
+            document.getElementById('modalGameBody').innerHTML = '';
+        }
+
+        function openGame(type) {
+            if (type === 'clicker') startClickerGame();
+            if (type === 'guess') startGuessGame();
+            if (type === 'reaction') startReactionGame();
+            if (type === 'color') startColorGame();
+            if (type === 'math') startMathGame();
+            if (type === 'memory') startMemoryGame();
+        }
+
+        /* --- 1. FAST CLICKER GAME --- */
+        let clickerCount = 0;
+        let clickerTimer = null;
+        let clickerTimeLeft = 10;
+
+        function startClickerGame() {
+            clickerCount = 0;
+            clickerTimeLeft = 10;
+            clearInterval(clickerTimer);
+
+            const body = `
+                <div class="space-y-6 w-full">
+                    <div class="flex justify-between items-center text-sm font-bold bg-slate-900 p-3 rounded-xl">
+                        <span class="text-gray-400">الوقت المتبقي: <strong id="clickTimer" class="text-rose-400">10</strong>s</span>
+                        <span class="text-purple-400">عدد النقرات: <strong id="clickCountDisplay" class="text-2xl text-white">0</strong></span>
+                    </div>
+
+                    <button id="clickBtn" onclick="registerClick()" class="w-40 h-40 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 hover:scale-105 active:scale-95 text-white font-black text-2xl shadow-2xl glow-purple mx-auto flex items-center justify-center select-none transition-all cursor-pointer">
+                        انقر بسرعة!
+                    </button>
+
+                    <p class="text-xs text-gray-400">انقر على الزر بأعلى سرعة قبل انقضاء الـ 10 ثوانٍ!</p>
+                </div>
+            `;
+            openGameModal("تحدي النقر السريع", `<i class="fa-solid fa-hand-pointer"></i>`, body);
+        }
+
+        function registerClick() {
+            if (clickerTimeLeft === 10 && !clickerTimer) {
+                clickerTimer = setInterval(() => {
+                    clickerTimeLeft--;
+                    const timerEl = document.getElementById('clickTimer');
+                    if (timerEl) timerEl.innerText = clickerTimeLeft;
+
+                    if (clickerTimeLeft <= 0) {
+                        clearInterval(clickerTimer);
+                        clickerTimer = null;
+                        finishClickerGame();
+                    }
+                }, 1000);
+            }
+
+            if (clickerTimeLeft > 0) {
+                clickerCount++;
+                const countEl = document.getElementById('clickCountDisplay');
+                if (countEl) countEl.innerText = clickerCount;
+            }
+        }
+
+        function finishClickerGame() {
+            const rewardCoins = Math.min(50, Math.floor(clickerCount * 0.8));
+            addCoinsAndXP(rewardCoins, 20);
+            document.getElementById('modalGameBody').innerHTML = `
+                <div class="space-y-4">
+                    <div class="text-3xl text-amber-400"><i class="fa-solid fa-trophy"></i></div>
+                    <h4 class="text-xl font-bold text-white">انتهى الوقت!</h4>
+                    <p class="text-sm text-gray-300">حققت <strong class="text-purple-400">${clickerCount}</strong> نقرة في 10 ثوانٍ.</p>
+                    <p class="text-sm text-amber-300 font-bold">+${rewardCoins} نقطة تمت إضافتها لحسابك!</p>
+                    <button onclick="startClickerGame()" class="bg-purple-600 text-white font-bold px-6 py-2.5 rounded-xl text-xs">إعادة التحدي</button>
+                </div>
+            `;
+        }
+
+        /* --- 2. NUMBER GUESSING GAME --- */
+        let targetNumber = 0;
+        let guessAttempts = 0;
+
+        function startGuessGame() {
+            targetNumber = Math.floor(Math.random() * 100) + 1;
+            guessAttempts = 0;
+
+            const body = `
+                <div class="space-y-5 w-full max-w-md mx-auto">
+                    <p class="text-xs text-gray-300">اخترنا رقماً بين <strong class="text-cyan-400">1</strong> و <strong class="text-cyan-400">100</strong>. خَمّن الرقم بأقل عدد محاولات!</p>
+                    <div id="guessHint" class="text-sm font-bold text-amber-400 bg-slate-900 p-3 rounded-xl border border-gray-800">ابدأ التخمين الآن</div>
+
+                    <div class="flex gap-2">
+                        <input type="number" id="guessInput" min="1" max="100" placeholder="أدخل الرقم..." 
+                               class="flex-1 bg-slate-900 border border-gray-700 text-center text-white text-lg rounded-xl p-3 focus:outline-none focus:border-cyan-500">
+                        <button onclick="submitGuess()" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-6 rounded-xl text-sm">تخمين</button>
+                    </div>
+                    <div class="text-xs text-gray-500">عدد المحاولات: <span id="guessAttemptCount">0</span></div>
+                </div>
+            `;
+            openGameModal("تخمين الرقم الخفي", `<i class="fa-solid fa-arrow-down-up-across-line"></i>`, body);
+        }
+
+        function submitGuess() {
+            const val = parseInt(document.getElementById('guessInput').value);
+            if (!val || val < 1 || val > 100) return;
+
+            guessAttempts++;
+            document.getElementById('guessAttemptCount').innerText = guessAttempts;
+            const hintEl = document.getElementById('guessHint');
+
+            if (val === targetNumber) {
+                const coinsEarned = Math.max(10, 40 - (guessAttempts * 3));
+                addCoinsAndXP(coinsEarned, 25);
+                document.getElementById('modalGameBody').innerHTML = `
+                    <div class="space-y-4">
+                        <div class="text-3xl text-emerald-400"><i class="fa-solid fa-circle-check"></i></div>
+                        <h4 class="text-xl font-bold text-white">إجابة صحيحة!</h4>
+                        <p class="text-sm text-gray-300">الرقم الصحيح هو <strong class="text-cyan-400">${targetNumber}</strong>.</p>
+                        <p class="text-xs text-gray-400">استغرقت ${guessAttempts} محاولات.</p>
+                        <p class="text-sm text-amber-300 font-bold">+${coinsEarned} نقطة مكافأة!</p>
+                        <button onclick="startGuessGame()" class="bg-cyan-600 text-white font-bold px-6 py-2.5 rounded-xl text-xs">لعبة جديدة</button>
+                    </div>
+                `;
+            } else if (val < targetNumber) {
+                hintEl.innerText = "الرقم المطلوب أكبر من " + val + " ⬆️";
+                hintEl.className = "text-sm font-bold text-cyan-400 bg-slate-900 p-3 rounded-xl border border-gray-800";
+            } else {
+                hintEl.innerText = "الرقم المطلوب أصغر من " + val + " ⬇️";
+                hintEl.className = "text-sm font-bold text-rose-400 bg-slate-900 p-3 rounded-xl border border-gray-800";
+            }
+            document.getElementById('guessInput').value = '';
+        }
+
+        /* --- 3. REACTION SPEED TEST --- */
+        let reactionStartTime = 0;
+        let reactionTimeout = null;
+
+        function startReactionGame() {
+            const body = `
+                <div id="reactionBox" onclick="handleReactionClick()" class="w-full h-52 rounded-2xl bg-rose-900/60 border border-rose-500/40 flex flex-col items-center justify-center cursor-pointer select-none transition-all p-4">
+                    <i class="fa-solid fa-hand text-4xl text-rose-300 mb-2"></i>
+                    <h4 class="text-lg font-bold text-white">انتظر تحوّل اللون للأخضر...</h4>
+                    <p class="text-xs text-rose-200 mt-1">لا تنقر الآن!</p>
+                </div>
+            `;
+            openGameModal("اختبار سرعة الاستجابة", `<i class="fa-solid fa-stopwatch"></i>`, body);
+
+            const randomDelay = Math.floor(Math.random() * 3000) + 2000;
+            reactionTimeout = setTimeout(() => {
+                const box = document.getElementById('reactionBox');
+                if (box) {
+                    box.className = "w-full h-52 rounded-2xl bg-emerald-600 border border-emerald-400 flex flex-col items-center justify-center cursor-pointer select-none transition-all p-4 glow-cyan";
+                    box.innerHTML = `
+                        <i class="fa-solid fa-bolt text-5xl text-white mb-2 animate-bounce"></i>
+                        <h4 class="text-2xl font-black text-white">انقر الآن بسرعة!!!</h4>
+                    `;
+                    reactionStartTime = Date.now();
+                }
+            }, randomDelay);
+        }
+
+        function handleReactionClick() {
+            if (reactionStartTime === 0) {
+                clearTimeout(reactionTimeout);
+                document.getElementById('modalGameBody').innerHTML = `
+                    <div class="space-y-4">
+                        <div class="text-3xl text-rose-400"><i class="fa-solid fa-circle-xmark"></i></div>
+                        <h4 class="text-lg font-bold text-white">نقر مبكر جداً!</h4>
+                        <p class="text-xs text-gray-400">لقد نقرت قبل تحول اللون إلى الأخضر.</p>
+                        <button onclick="startReactionGame()" class="bg-emerald-600 text-white font-bold px-6 py-2 rounded-xl text-xs">إعادة المحاولة</button>
+                    </div>
+                `;
+            } else {
+                const ms = Date.now() - reactionStartTime;
+                reactionStartTime = 0;
+                const coinsEarned = ms < 250 ? 40 : ms < 350 ? 25 : 15;
+                addCoinsAndXP(coinsEarned, 20);
+
+                document.getElementById('modalGameBody').innerHTML = `
+                    <div class="space-y-4">
+                        <div class="text-3xl text-emerald-400"><i class="fa-solid fa-bolt"></i></div>
+                        <h4 class="text-xl font-bold text-white">زمن الاستجابة: <span class="text-emerald-400">${ms} ms</span></h4>
+                        <p class="text-xs text-gray-300">${ms < 250 ? 'سرعة استجابة خارقة ⚡' : 'أداء ممتاز 👏'}</p>
+                        <p class="text-sm text-amber-300 font-bold">+${coinsEarned} نقطة مكافأة!</p>
+                        <button onclick="startReactionGame()" class="bg-emerald-600 text-white font-bold px-6 py-2.5 rounded-xl text-xs">حاول مجدداً</button>
+                    </div>
+                `;
+            }
+        }
+
+        /* --- 4. COLOR MATCH GAME --- */
+        let colorScore = 0;
+        let currentColorMatch = false;
+
+        const colorsList = [
+            { name: "أحمر", color: "#ef4444" },
+            { name: "أزرق", color: "#3b82f6" },
+            { name: "أخضر", color: "#10b981" },
+            { name: "أصفر", color: "#eab308" }
+        ];
+
+        function startColorGame() {
+            colorScore = 0;
+            openGameModal("مطابقة الألوان والنصوص", `<i class="fa-solid fa-palette"></i>`, ``);
+            nextColorRound();
+        }
+
+        function nextColorRound() {
+            const wordObj = colorsList[Math.floor(Math.random() * colorsList.length)];
+            const visualObj = colorsList[Math.floor(Math.random() * colorsList.length)];
+            currentColorMatch = (wordObj.name === visualObj.name);
+
+            document.getElementById('modalGameBody').innerHTML = `
+                <div class="space-y-6 w-full max-w-sm mx-auto">
+                    <div class="text-xs text-gray-400 flex justify-between">
+                        <span>النقاط الحالية: <strong class="text-white">${colorScore}</strong></span>
+                        <span>هل يطابق الاسم اللون البصري؟</span>
+                    </div>
+
+                    <div class="bg-slate-900 border border-gray-800 py-8 rounded-2xl flex items-center justify-center">
+                        <span class="text-4xl font-black" style="color: ${visualObj.color}">${wordObj.name}</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <button onclick="answerColor(true)" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl">نعم (متطابق)</button>
+                        <button onclick="answerColor(false)" class="bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 rounded-xl">لا (غير متطابق)</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function answerColor(ans) {
+            if (ans === currentColorMatch) {
+                colorScore++;
+                if (colorScore >= 5) {
+                    addCoinsAndXP(35, 25);
+                    document.getElementById('modalGameBody').innerHTML = `
+                        <div class="space-y-4">
+                            <div class="text-3xl text-pink-400"><i class="fa-solid fa-trophy"></i></div>
+                            <h4 class="text-xl font-bold text-white">أحسنت! قوة تركيز عالية</h4>
+                            <p class="text-xs text-gray-300">أكملت 5 إجابات صحيحة متتالية.</p>
+                            <p class="text-sm text-amber-300 font-bold">+35 نقطة تمت إضافتها!</p>
+                            <button onclick="startColorGame()" class="bg-pink-600 text-white font-bold px-6 py-2.5 rounded-xl text-xs">لعبة جديدة</button>
+                        </div>
+                    `;
+                } else {
+                    nextColorRound();
+                }
+            } else {
+                document.getElementById('modalGameBody').innerHTML = `
+                    <div class="space-y-4">
+                        <div class="text-3xl text-rose-500"><i class="fa-solid fa-xmark"></i></div>
+                        <h4 class="text-lg font-bold text-white">إجابة خاطئة!</h4>
+                        <p class="text-xs text-gray-400">جمعت ${colorScore} إجابات صحيحة.</p>
+                        <button onclick="startColorGame()" class="bg-pink-600 text-white font-bold px-6 py-2.5 rounded-xl text-xs">محاولة جديدة</button>
+                    </div>
+                `;
+            }
+        }
+
+        /* --- 5. FAST MATH GAME --- */
+        let mathAns = 0;
+        let mathScore = 0;
+
+        function startMathGame() {
+            mathScore = 0;
+            openGameModal("تحدي الحساب السريع", `<i class="fa-solid fa-calculator"></i>`, ``);
+            nextMathQuestion();
+        }
+
+        function nextMathQuestion() {
+            const n1 = Math.floor(Math.random() * 20) + 1;
+            const n2 = Math.floor(Math.random() * 20) + 1;
+            const isPlus = Math.random() > 0.5;
+            mathAns = isPlus ? n1 + n2 : n1 - n2;
+
+            document.getElementById('modalGameBody').innerHTML = `
+                <div class="space-y-5 w-full max-w-sm mx-auto">
+                    <div class="text-xs text-gray-400">النتيجة الحالية: <strong class="text-amber-400">${mathScore}</strong></div>
+                    <div class="bg-slate-900 border border-amber-500/30 py-6 rounded-2xl text-3xl font-black text-white">
+                        ${n1} ${isPlus ? '+' : '-'} ${n2} = ?
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="number" id="mathInput" placeholder="أدخل الناتج..." 
+                               class="flex-1 bg-slate-900 border border-gray-700 text-center text-white text-lg rounded-xl p-3 focus:outline-none focus:border-amber-500">
+                        <button onclick="submitMath()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-6 rounded-xl">إرسال</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function submitMath() {
+            const userVal = parseInt(document.getElementById('mathInput').value);
+            if (userVal === mathAns) {
+                mathScore++;
+                if (mathScore >= 5) {
+                    addCoinsAndXP(60, 30);
+                    document.getElementById('modalGameBody').innerHTML = `
+                        <div class="space-y-4">
+                            <div class="text-3xl text-amber-400"><i class="fa-solid fa-award"></i></div>
+                            <h4 class="text-xl font-bold text-white">عبقري رياضيات!</h4>
+                            <p class="text-xs text-gray-300">أجبت على 5 مسائل حسّابية بنجاح.</p>
+                            <p class="text-sm text-amber-300 font-bold">+60 نقطة مكافأة!</p>
+                            <button onclick="startMathGame()" class="bg-amber-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-xs">جولة جديدة</button>
+                        </div>
+                    `;
+                } else {
+                    nextMathQuestion();
+                }
+            } else {
+                document.getElementById('modalGameBody').innerHTML = `
+                    <div class="space-y-4">
+                        <div class="text-3xl text-rose-500"><i class="fa-solid fa-circle-xmark"></i></div>
+                        <h4 class="text-lg font-bold text-white">خطأ في الحساب!</h4>
+                        <button onclick="startMathGame()" class="bg-amber-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-xs">حاول مجدداً</button>
+                    </div>
+                `;
+            }
+        }
+
+        /* --- 6. MEMORY CARDS GAME --- */
+        const emojis = ['🚀', '🎮', '💎', '🔥', '🚀', '🎮', '💎', '🔥'];
+        let flippedCards = [];
+        let matchedCount = 0;
+
+        function startMemoryGame() {
+            matchedCount = 0;
+            flippedCards = [];
+            const shuffled = [...emojis].sort(() => Math.random() - 0.5);
+
+            let cardsHtml = `<div class="grid grid-cols-4 gap-3 w-full max-w-sm mx-auto">`;
+            shuffled.forEach((emoji, idx) => {
+                cardsHtml += `
+                    <div onclick="flipMemoryCard(this, '${emoji}')" data-emoji="${emoji}" class="memory-card h-20 bg-slate-900 border border-indigo-500/30 rounded-2xl flex items-center justify-center text-2xl cursor-pointer hover:border-indigo-400 transition-all select-none">
+                        ❓
+                    </div>
+                `;
+            });
+            cardsHtml += `</div>`;
+
+            openGameModal("تحدي كروت الذاكرة", `<i class="fa-solid fa-brain"></i>`, cardsHtml);
+        }
+
+        function flipMemoryCard(cardEl, emoji) {
+            if (flippedCards.length >= 2 || cardEl.classList.contains('matched') || cardEl.innerText !== '❓') return;
+
+            cardEl.innerText = emoji;
+            cardEl.classList.add('bg-indigo-950', 'border-indigo-400');
+            flippedCards.push(cardEl);
+
+            if (flippedCards.length === 2) {
+                if (flippedCards[0].getAttribute('data-emoji') === flippedCards[1].getAttribute('data-emoji')) {
+                    flippedCards[0].classList.add('matched');
+                    flippedCards[1].classList.add('matched');
+                    flippedCards = [];
+                    matchedCount += 2;
+
+                    if (matchedCount === emojis.length) {
+                        addCoinsAndXP(45, 30);
+                        setTimeout(() => {
+                            document.getElementById('modalGameBody').innerHTML = `
+                                <div class="space-y-4">
+                                    <div class="text-3xl text-indigo-400"><i class="fa-solid fa-brain"></i></div>
+                                    <h4 class="text-xl font-bold text-white">ذاكرة حديدية!</h4>
+                                    <p class="text-xs text-gray-300">طابقت جميع الأشكال بنجاح.</p>
+                                    <p class="text-sm text-amber-300 font-bold">+45 نقطة تمت إضافتها!</p>
+                                    <button onclick="startMemoryGame()" class="bg-indigo-600 text-white font-bold px-6 py-2.5 rounded-xl text-xs">لعبة جديدة</button>
+                                </div>
+                            `;
+                        }, 500);
+                    }
+                } else {
+                    setTimeout(() => {
+                        flippedCards.forEach(c => {
+                            c.innerText = '❓';
+                            c.classList.remove('bg-indigo-950', 'border-indigo-400');
+                        });
+                        flippedCards = [];
+                    }, 800);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
