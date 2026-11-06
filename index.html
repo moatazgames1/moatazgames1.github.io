@@ -1571,37 +1571,24 @@
             const cleanData = {
                 uid: currentUser.uid,
                 email: currentUser.email || '',
-                displayName: currentUser.displayName || state.activeTitle || 'لاعب',
-                coins: Number(state.coins) || 0,
-                xp: Number(state.xp) || 0,
-                level: Number(state.level) || 1,
-                gamesPlayed: Number(state.gamesPlayed) || 0,
-                lastDailyClaim: state.lastDailyClaim || null,
-                activeTitle: state.activeTitle || 'مبتدئ',
-                unlockedTitles: state.unlockedTitles || ['مبتدئ'],
-                quests: state.quests || [],
-                updatedAt: (window.firebase && firebase.firestore && firebase.firestore.FieldValue) ? firebase.firestore.FieldValue.serverTimestamp() : new Date().toISOString()
+                displayName: currentUser.displayName || 'لاعب',
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            firestoreDb.collection('users').doc(currentUser.uid).set(cleanData, { merge: true })
+            firestoreDb.collection('users')
+                .doc(currentUser.uid)
+                .set(cleanData, { merge: true })
                 .then(() => {
-                    return firestoreDb.collection('leaderboard').doc(currentUser.uid).set({
-                        uid: currentUser.uid,
-                        displayName: cleanData.displayName,
-                        level: cleanData.level,
-                        coins: cleanData.coins,
-                        activeTitle: cleanData.activeTitle,
-                        updatedAt: cleanData.updatedAt
-                    }, { merge: true });
-                })
-                .then(() => {
-                    showToast("تم مزامنة بياناتك مع Cloud Firestore بنجاح!", "fa-solid fa-cloud-arrow-up text-emerald-400");
+                    showToast(
+                        "تم حفظ بيانات حسابك السحابية بنجاح!",
+                        "fa-solid fa-cloud-arrow-up text-emerald-400"
+                    );
                 })
                 .catch(err => {
                     console.error("Firestore sync error:", err);
+                    showToast("تعذرت المزامنة السحابية", "fa-solid fa-triangle-exclamation");
                 });
         }
-
         /* ================= AUTHENTICATION ACTIONS ================= */
         function formatFirebaseErrorMessage(err) {
             if (!err) return "حدث خطأ غير معروف.";
