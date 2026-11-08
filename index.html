@@ -2179,17 +2179,56 @@
             }
         }
 
-        function claimDailyBonus() {
-            const now = Date.now();
-            if (state.lastDailyClaim && (now - state.lastDailyClaim < 86400000)) {
-                showToast("لقد أخذت مكافأتك اليومية بالفعل! عد غداً.", "fa-solid fa-clock text-amber-400");
-                return;
+        async function claimDailyBonus() {
+    if (!currentUser) {
+        showToast("سجل الدخول أولاً!", "fa-solid fa-user");
+        return;
+    }
+
+    try {
+        const token = await currentUser.getIdToken();
+
+        const response = await fetch(
+            "https://moataz-games-api.motazfaysel5.workers.dev/api/daily-bonus",
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
             }
-            state.lastDailyClaim = now;
-            addCoinsAndXP(200, 50);
-            checkDailyBonusState();
-            showToast("تم إضافة 200 نقطة مكافأة يومية لحسابك!", "fa-solid fa-gift text-amber-400");
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || "فشل استلام المكافأة");
         }
+
+        if (!data.claimed) {
+            showToast("لقد استلمت مكافأتك اليوم بالفعل!", "fa-solid fa-clock");
+            return;
+        }
+
+        state.coins = Number(data.player.coins);
+        state.xp = Number(data.player.xp);
+        state.level = Number(data.player.level);
+        state.gamesPlayed = Number(data.player.games_played);
+        state.lastDailyClaim = Date.now();
+
+        saveUserDataLocally();
+        updateUI();
+        checkDailyBonusState();
+
+        showToast(
+            "تم استلام 200 عملة و50 XP بنجاح ❤️",
+            "fa-solid fa-gift"
+        );
+
+    } catch (error) {
+        console.error("Daily bonus error:", error);
+        showToast("تعذر استلام المكافأة، حاول مجدداً", "fa-solid fa-triangle-exclamation");
+    }
+}
 
         function renderQuests() {
             const container = document.getElementById('questsList');
