@@ -1472,8 +1472,45 @@
             }
         }
 
-        /* ================= AUTH STATE HANDLER ================= */
-        function handleAuthStateChanged(user) {
+      async function loadPlayerFromCloud(user) {
+    try {
+        const token = await user.getIdToken();
+
+        const response = await fetch(
+            "https://moataz-games-api.motazfaysel5.workers.dev/api/me",
+            {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || "فشل تحميل البيانات");
+        }
+
+        const player = data.player;
+
+        state.coins = Number(player.coins);
+        state.xp = Number(player.xp);
+        state.level = Number(player.level);
+        state.gamesPlayed = Number(player.games_played);
+
+        saveUserDataLocally();
+        updateUI();
+
+        showToast("تم تحميل بياناتك السحابية بنجاح ❤️", "fa-solid fa-cloud");
+
+    } catch (error) {
+        console.error("Cloud loading error:", error);
+        showToast("تعذر تحميل بياناتك السحابية", "fa-solid fa-triangle-exclamation");
+    }
+          }
+      /* ================= AUTH STATE HANDLER ================= */
+      function handleAuthStateChanged(user) {
             currentUser = user;
             const loginBtn = document.getElementById('loginHeaderBtn');
             const userChip = document.getElementById('userHeaderChip');
