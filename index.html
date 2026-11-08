@@ -1542,7 +1542,7 @@
                 document.getElementById('profileID').innerText = `معرف Firebase: #${user.uid.slice(0, 8)}`;
 
                 // Subscribe to real Firestore document
-                listenToUserDataInFirestore(user.uid);
+                loadPlayerFromCloud(user);
             } else {
                 if (firestoreUnsubscribe) {
                     firestoreUnsubscribe();
