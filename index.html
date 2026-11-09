@@ -1472,6 +1472,25 @@
             }
         }
 
+async function cloudGameRequest(path, body = {}) {
+    if (!currentUser) throw new Error("سجل الدخول أولاً");
+    const token = await currentUser.getIdToken();
+    const response = await fetch("https://moataz-games-api.motazfaysel5.workers.dev" + path, {
+        method: "POST", headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+    });
+    const data = await response.json();
+    if (!response.ok || !data.success) throw new Error(data.error || "تعذر الاتصال بالسحابة");
+    return data;
+}
+function applyCloudPlayer(player) {
+    if (!player) return;
+    state.coins=Number(player.coins||0); state.xp=Number(player.xp||0);
+    state.level=Number(player.level||1); state.gamesPlayed=Number(player.games_played||0);
+    if(Array.isArray(player.quests)) state.quests=player.quests.map(q=>({id:Number(q.id),title:q.title,goal:Number(q.goal),current:Number(q.current),reward:Number(q.reward),claimed:Boolean(q.claimed)}));
+    saveUserDataLocally(); updateUI(); if(typeof renderQuests==="function") renderQuests();
+}
+
       async function loadPlayerFromCloud(user) {
     try {
         const token = await user.getIdToken();
@@ -1494,13 +1513,7 @@
 
         const player = data.player;
 
-        state.coins = Number(player.coins);
-        state.xp = Number(player.xp);
-        state.level = Number(player.level);
-        state.gamesPlayed = Number(player.games_played);
-
-        saveUserDataLocally();
-        updateUI();
+        applyCloudPlayer(player);
 
         showToast("تم تحميل بياناتك السحابية بنجاح ❤️", "fa-solid fa-cloud");
 
@@ -2209,14 +2222,9 @@
             return;
         }
 
-        state.coins = Number(data.player.coins);
-        state.xp = Number(data.player.xp);
-        state.level = Number(data.player.level);
-        state.gamesPlayed = Number(data.player.games_played);
+        applyCloudPlayer(data.player);
         state.lastDailyClaim = Date.now();
-
         saveUserDataLocally();
-        updateUI();
         checkDailyBonusState();
 
         showToast(
@@ -2262,12 +2270,15 @@
             });
         }
 
-        function claimQuestReward(questId) {
-            const quest = state.quests.find(q => q.id === questId);
-            if (quest && quest.current >= quest.goal && !quest.claimed) {
-                quest.claimed = true;
-                addCoinsAndXP(quest.reward, 30);
-                renderQuests();
+        async function claimQuestReward(questId) {
+            if (!currentUser) { showToast("سجل الدخول أولاً!", "fa-solid fa-user"); return; }
+            try {
+                const data = await cloudGameRequest("/api/quest/claim", { questId: Number(questId) });
+                applyCloudPlayer(data.player);
+                showToast(`تم استلام ${data.rewardCoins} عملة من المهمة!`, "fa-solid fa-coins");
+            } catch (error) {
+                showToast(error.message || "تعذر استلام مكافأة المهمة", "fa-solid fa-triangle-exclamation");
+                console.error("Quest claim error:", error);
             }
         }
 
@@ -2765,13 +2776,7 @@
 
         const player = data.player;
 
-        state.coins = Number(player.coins);
-        state.xp = Number(player.xp);
-        state.level = Number(player.level);
-        state.gamesPlayed = Number(player.games_played);
-
-        saveUserDataLocally();
-        updateUI();
+        applyCloudPlayer(player);
         renderQuests();
 
         showToast("تمت إضافة مكافأتك إلى حسابك السحابي!", "fa-solid fa-coins");
@@ -2799,263 +2804,56 @@
     }
 }
 
-        /* --- 2. NUMBER GUESSING GAME --- */
-        let targetNumber = 0;
-        let guessAttempts = 0;
-
-        function startGuessGame() {
-            targetNumber = Math.floor(Math.random() * 100) + 1;
-            guessAttempts = 0;
-
-            const body = `
-                <div class="space-y-5 w-full max-w-md mx-auto">
-                    <p class="text-xs text-gray-300">اخترنا رقماً بين <strong class="text-cyan-400">1</strong> و <strong class="text-cyan-400">100</strong>. خَمّن الرقم بأقل عدد محاولات!</p>
-                    <div id="guessHint" class="text-sm font-bold text-amber-400 bg-slate-900 p-3 rounded-xl border border-gray-800">ابدأ التخمين الآن</div>
-                    <div class="flex gap-2">
-                        <input type="number" id="guessInput" min="1" max="100" placeholder="أدخل الرقم..."
-                                class="flex-1 bg-slate-900 border border-gray-700 text-center text-white text-lg rounded-xl p-3 focus:outline-none focus:border-cyan-500">
-                        <button onclick="submitGuess()" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-6 rounded-xl text-sm">تخمين</button>
-                    </div>
-                    <div class="text-xs text-gray-500">عدد المحاولات: <span id="guessAttemptCount">0</span></div>
-                </div>
-            `;
-            openGameModal("تخمين الرقم الخفي", `<i class="fa-solid fa-arrow-down-up-across-line"></i>`, body);
+        /* --- 2. NUMBER GUESSING GAME (CLOUD VERIFIED) --- */
+        let guessAttempts = 0, guessSessionId = null;
+        async function startGuessGame() {
+            try {
+                const data=await cloudGameRequest("/api/guess/start"); guessSessionId=data.sessionId; guessAttempts=0;
+                const body=`<div class="space-y-5 w-full max-w-md mx-auto"><p class="text-xs text-gray-300">اخترنا رقماً بين <strong class="text-cyan-400">1</strong> و <strong class="text-cyan-400">100</strong>. خَمّن الرقم بأقل عدد محاولات!</p><div id="guessHint" class="text-sm font-bold text-amber-400 bg-slate-900 p-3 rounded-xl border border-gray-800">ابدأ التخمين الآن</div><div class="flex gap-2"><input type="number" id="guessInput" min="1" max="100" placeholder="أدخل الرقم..." class="flex-1 bg-slate-900 border border-gray-700 text-center text-white text-lg rounded-xl p-3"><button onclick="submitGuess()" class="bg-cyan-600 text-white font-bold px-6 rounded-xl text-sm">تخمين</button></div><div class="text-xs text-gray-500">عدد المحاولات: <span id="guessAttemptCount">0</span></div></div>`;
+                openGameModal("تخمين الرقم الخفي", `<i class="fa-solid fa-arrow-down-up-across-line"></i>`, body);
+            } catch(e){showToast(e.message||"تعذر بدء اللعبة","fa-solid fa-wifi");}
+        }
+        async function submitGuess(){
+            const input=document.getElementById('guessInput'), val=Number(input&&input.value);
+            if(!Number.isInteger(val)||val<1||val>100||!guessSessionId)return;
+            try{
+                const d=await cloudGameRequest("/api/guess/attempt",{sessionId:guessSessionId,guess:val});
+                guessAttempts=d.attempts; document.getElementById('guessAttemptCount').innerText=guessAttempts;
+                if(!d.correct){const h=document.getElementById('guessHint');h.innerText=d.hint==='higher'?`الرقم المطلوب أكبر من ${val} ⬆️`:`الرقم المطلوب أصغر من ${val} ⬇️`;h.className="text-sm font-bold text-cyan-400 bg-slate-900 p-3 rounded-xl border border-gray-800";input.value='';input.focus();return;}
+                guessSessionId=null;applyCloudPlayer(d.player);
+                document.getElementById('modalGameBody').innerHTML=`<div class="space-y-4"><div class="text-4xl text-emerald-400"><i class="fa-solid fa-circle-check"></i></div><h4 class="text-xl font-bold text-white">إجابة صحيحة!</h4><p class="text-sm text-gray-300">الرقم الصحيح هو <strong class="text-cyan-400">${d.answer}</strong>.</p><p class="text-xs text-gray-400">استغرقت ${d.attempts} محاولات.</p><p class="text-sm text-amber-300 font-bold">+${d.rewardCoins} نقطة أضيفت لحسابك السحابي!</p><button onclick="startGuessGame()" class="bg-cyan-600 text-white font-bold px-6 py-2.5 rounded-xl text-xs">لعبة جديدة</button></div>`;
+            }catch(e){showToast(e.message||"تعذر إرسال التخمين","fa-solid fa-triangle-exclamation");}
         }
 
-        function submitGuess() {
-            const val = parseInt(document.getElementById('guessInput').value);
-            if (!val || val < 1 || val > 100) return;
-
-            guessAttempts++;
-            document.getElementById('guessAttemptCount').innerText = guessAttempts;
-            const hintEl = document.getElementById('guessHint');
-
-            if (val === targetNumber) {
-                const coinsEarned = Math.max(10, 40 - (guessAttempts * 3));
-                addCoinsAndXP(coinsEarned, 25);
-
-                document.getElementById('modalGameBody').innerHTML = `
-                    <div class="space-y-4">
-                        <div class="text-4xl text-emerald-400"><i class="fa-solid fa-circle-check"></i></div>
-                        <h4 class="text-xl font-bold text-white">إجابة صحيحة!</h4>
-                        <p class="text-sm text-gray-300">الرقم الصحيح هو <strong class="text-cyan-400">${targetNumber}</strong>.</p>
-                        <p class="text-xs text-gray-400">استغرقت ${guessAttempts} محاولات.</p>
-                        <p class="text-sm text-amber-300 font-bold">+${coinsEarned} نقطة مكافأة!</p>
-                        <button onclick="startGuessGame()" class="bg-cyan-600 text-white font-bold px-6 py-2.5 rounded-xl text-xs">لعبة جديدة</button>
-                    </div>
-                `;
-            } else if (val < targetNumber) {
-                hintEl.innerText = "الرقم المطلوب أكبر من " + val + " ⬆️";
-                hintEl.className = "text-sm font-bold text-cyan-400 bg-slate-900 p-3 rounded-xl border border-gray-800";
-            } else {
-                hintEl.innerText = "الرقم المطلوب أصغر من " + val + " ⬇️";
-                hintEl.className = "text-sm font-bold text-rose-400 bg-slate-900 p-3 rounded-xl border border-gray-800";
-            }
+        /* --- 3. REACTION SPEED TEST (CLOUD VERIFIED) --- */
+        let reactionStartTime=0,reactionTimeout=null,reactionSessionId=null;
+        async function startReactionGame(){
+            try{
+                const d=await cloudGameRequest("/api/reaction/start");reactionSessionId=d.sessionId;reactionStartTime=0;if(reactionTimeout)clearTimeout(reactionTimeout);
+                openGameModal("اختبار سرعة الاستجابة",`<i class="fa-solid fa-stopwatch"></i>`,`<div id="reactionBox" onclick="handleReactionClick()" class="w-full h-52 rounded-2xl bg-rose-900/60 border border-rose-500/40 flex flex-col items-center justify-center cursor-pointer p-4"><i class="fa-solid fa-hand text-4xl text-rose-300 mb-2"></i><h4 class="text-lg font-bold text-white">انتظر تحوّل اللون للأخضر...</h4><p class="text-xs text-rose-200 mt-1">لا تنقر الآن!</p></div>`);
+                reactionTimeout=setTimeout(async()=>{try{await cloudGameRequest("/api/reaction/ready",{sessionId:reactionSessionId});const box=document.getElementById('reactionBox');if(box){box.className="w-full h-52 rounded-2xl bg-emerald-600 border border-emerald-400 flex flex-col items-center justify-center cursor-pointer p-4";box.innerHTML=`<i class="fa-solid fa-bolt text-5xl text-white mb-2"></i><h4 class="text-2xl font-black text-white">انقر الآن بسرعة!!!</h4>`;reactionStartTime=Date.now();}}catch(e){showToast(e.message||"تعذر تجهيز الاختبار","fa-solid fa-triangle-exclamation");}},Math.floor(Math.random()*3000)+2000);
+            }catch(e){showToast(e.message||"تعذر بدء الاختبار","fa-solid fa-wifi");}
+        }
+        async function handleReactionClick(){
+            if(!reactionSessionId)return;
+            if(reactionStartTime===0){if(reactionTimeout)clearTimeout(reactionTimeout);reactionTimeout=null;reactionSessionId=null;document.getElementById('modalGameBody').innerHTML=`<div class="space-y-4"><div class="text-4xl text-rose-400"><i class="fa-solid fa-circle-xmark"></i></div><h4 class="text-lg font-bold text-white">نقر مبكر جداً!</h4><p class="text-xs text-gray-400">لقد نقرت قبل تحول اللون إلى الأخضر.</p><button onclick="startReactionGame()" class="bg-emerald-600 text-white font-bold px-6 py-2 rounded-xl text-xs">إعادة المحاولة</button></div>`;return;}
+            reactionStartTime=0;const id=reactionSessionId;reactionSessionId=null;
+            try{const d=await cloudGameRequest("/api/reaction/finish",{sessionId:id});applyCloudPlayer(d.player);document.getElementById('modalGameBody').innerHTML=`<div class="space-y-4"><div class="text-4xl text-emerald-400"><i class="fa-solid fa-bolt"></i></div><h4 class="text-xl font-bold text-white">زمن الاستجابة: <span class="text-emerald-400">${d.ms} ms</span></h4><p class="text-xs text-gray-300">${d.ms<250?'سرعة استجابة خارقة ⚡':'أداء ممتاز 👏'}</p><p class="text-sm text-amber-300 font-bold">+${d.rewardCoins} نقطة أضيفت لحسابك!</p><button onclick="startReactionGame()" class="bg-emerald-600 text-white font-bold px-6 py-2.5 rounded-xl text-xs">حاول مجدداً</button></div>`;}catch(e){showToast(e.message||"تعذر حفظ النتيجة","fa-solid fa-triangle-exclamation");}
         }
 
-        /* --- 3. REACTION SPEED TEST --- */
-        let reactionStartTime = 0;
-        let reactionTimeout = null;
+        /* --- 4. COLOR MATCH GAME (CLOUD VERIFIED) --- */
+        let colorScore=0,colorSessionId=null,currentColorChallenge=null;
+        function renderColorChallenge(){const c=currentColorChallenge;document.getElementById('modalGameBody').innerHTML=`<div class="space-y-6 w-full max-w-sm mx-auto"><div class="text-xs text-gray-400 flex justify-between"><span>النقاط الحالية: <strong class="text-white">${colorScore}</strong></span><span>هل يطابق الاسم اللون البصري؟</span></div><div class="bg-slate-900 border border-gray-800 py-8 rounded-2xl flex items-center justify-center"><span class="text-4xl font-black" style="color:${c.color}">${c.word}</span></div><div class="grid grid-cols-2 gap-4"><button onclick="answerColor(true)" class="bg-emerald-600 text-white font-bold py-3 rounded-xl">نعم (متطابق)</button><button onclick="answerColor(false)" class="bg-rose-600 text-white font-bold py-3 rounded-xl">لا (غير متطابق)</button></div></div>`;}
+        async function startColorGame(){try{const d=await cloudGameRequest("/api/color/start");colorSessionId=d.sessionId;colorScore=0;currentColorChallenge=d.challenge;openGameModal("مطابقة الألوان والنصوص",`<i class="fa-solid fa-palette"></i>`,``);renderColorChallenge();}catch(e){showToast(e.message||"تعذر بدء لعبة الألوان","fa-solid fa-wifi");}}
+        async function answerColor(ans){if(!colorSessionId)return;try{const d=await cloudGameRequest("/api/color/answer",{sessionId:colorSessionId,answer:Boolean(ans)});if(!d.correct){colorSessionId=null;document.getElementById('modalGameBody').innerHTML=`<div class="space-y-4"><div class="text-4xl text-rose-500"><i class="fa-solid fa-xmark"></i></div><h4 class="text-lg font-bold text-white">إجابة خاطئة!</h4><p class="text-xs text-gray-400">جمعت ${colorScore} إجابات صحيحة.</p><button onclick="startColorGame()" class="bg-pink-600 text-white font-bold px-6 py-2.5 rounded-xl text-xs">محاولة جديدة</button></div>`;return;}colorScore=d.streak;if(d.completed){colorSessionId=null;applyCloudPlayer(d.player);document.getElementById('modalGameBody').innerHTML=`<div class="space-y-4"><div class="text-4xl text-pink-400"><i class="fa-solid fa-trophy"></i></div><h4 class="text-xl font-bold text-white">أحسنت! قوة تركيز عالية</h4><p class="text-xs text-gray-300">أكملت 5 إجابات صحيحة متتالية.</p><p class="text-sm text-amber-300 font-bold">+${d.rewardCoins} نقطة تمت إضافتها!</p><button onclick="startColorGame()" class="bg-pink-600 text-white font-bold px-6 py-2.5 rounded-xl text-xs">لعبة جديدة</button></div>`;}else{currentColorChallenge=d.challenge;renderColorChallenge();}}catch(e){showToast(e.message||"تعذر التحقق من الإجابة","fa-solid fa-triangle-exclamation");}}
 
-        function startReactionGame() {
-            reactionStartTime = 0;
-            if (reactionTimeout) clearTimeout(reactionTimeout);
+        /* --- 5. FAST MATH GAME (CLOUD VERIFIED) --- */
+        let mathScore=0,mathSessionId=null,currentMathChallenge=null;
+        function renderMathChallenge(){const m=currentMathChallenge;document.getElementById('modalGameBody').innerHTML=`<div class="space-y-5 w-full max-w-sm mx-auto"><div class="text-xs text-gray-400">النتيجة الحالية: <strong class="text-amber-400 text-sm">${mathScore}</strong></div><div class="bg-slate-900 border border-amber-500/30 py-6 rounded-2xl text-3xl font-black text-white">${m.a} ${m.operator} ${m.b} = ?</div><div class="flex gap-2"><input type="number" id="mathInput" placeholder="أدخل الناتج..." class="flex-1 bg-slate-900 border border-gray-700 text-center text-white text-lg rounded-xl p-3"><button onclick="submitMath()" class="bg-amber-500 text-slate-950 font-bold px-6 rounded-xl">إرسال</button></div></div>`;setTimeout(()=>{const i=document.getElementById('mathInput');if(i){i.focus();i.onkeydown=e=>{if(e.key==='Enter')submitMath();};}},50);}
+        async function startMathGame(){try{const d=await cloudGameRequest("/api/math/start");mathSessionId=d.sessionId;mathScore=0;currentMathChallenge=d.challenge;openGameModal("تحدي الحساب السريع",`<i class="fa-solid fa-calculator"></i>`,``);renderMathChallenge();}catch(e){showToast(e.message||"تعذر بدء تحدي الحساب","fa-solid fa-wifi");}}
+        async function submitMath(){const inp=document.getElementById('mathInput');if(!inp||!mathSessionId)return;const val=Number(inp.value);if(!Number.isInteger(val))return;try{const d=await cloudGameRequest("/api/math/answer",{sessionId:mathSessionId,answer:val});if(!d.correct){mathSessionId=null;document.getElementById('modalGameBody').innerHTML=`<div class="space-y-4"><div class="text-4xl text-rose-500"><i class="fa-solid fa-circle-xmark"></i></div><h4 class="text-lg font-bold text-white">خطأ في الحساب!</h4><p class="text-xs text-gray-400">الإجابة الصحيحة كانت: ${d.answer}</p><button onclick="startMathGame()" class="bg-amber-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-xs">حاول مجدداً</button></div>`;return;}mathScore=d.streak;if(d.completed){mathSessionId=null;applyCloudPlayer(d.player);document.getElementById('modalGameBody').innerHTML=`<div class="space-y-4"><div class="text-4xl text-amber-400"><i class="fa-solid fa-award"></i></div><h4 class="text-xl font-bold text-white">عبقري رياضيات!</h4><p class="text-xs text-gray-300">أجبت على 5 مسائل حسابية بنجاح.</p><p class="text-sm text-amber-300 font-bold">+${d.rewardCoins} نقطة أضيفت لحسابك!</p><button onclick="startMathGame()" class="bg-amber-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-xs">جولة جديدة</button></div>`;}else{currentMathChallenge=d.challenge;renderMathChallenge();}}catch(e){showToast(e.message||"تعذر التحقق من الإجابة","fa-solid fa-triangle-exclamation");}}
 
-            const body = `
-                <div id="reactionBox" onclick="handleReactionClick()" class="w-full h-52 rounded-2xl bg-rose-900/60 border border-rose-500/40 flex flex-col items-center justify-center cursor-pointer select-none transition-all p-4">
-                    <i class="fa-solid fa-hand text-4xl text-rose-300 mb-2"></i>
-                    <h4 class="text-lg font-bold text-white">انتظر تحوّل اللون للأخضر...</h4>
-                    <p class="text-xs text-rose-200 mt-1">لا تنقر الآن!</p>
-                </div>
-            `;
-            openGameModal("اختبار سرعة الاستجابة", `<i class="fa-solid fa-stopwatch"></i>`, body);
-
-            const randomDelay = Math.floor(Math.random() * 3000) + 2000;
-            reactionTimeout = setTimeout(() => {
-                const box = document.getElementById('reactionBox');
-                if (box) {
-                    box.className = "w-full h-52 rounded-2xl bg-emerald-600 border border-emerald-400 flex flex-col items-center justify-center cursor-pointer select-none transition-all p-4 glow-cyan";
-                    box.innerHTML = `
-                        <i class="fa-solid fa-bolt text-5xl text-white mb-2 animate-bounce"></i>
-                        <h4 class="text-2xl font-black text-white">انقر الآن بسرعة!!!</h4>
-                    `;
-                    reactionStartTime = Date.now();
-                }
-            }, randomDelay);
-        }
-
-        function handleReactionClick() {
-            if (reactionStartTime === 0) {
-                clearTimeout(reactionTimeout);
-                document.getElementById('modalGameBody').innerHTML = `
-                    <div class="space-y-4">
-                        <div class="text-4xl text-rose-400"><i class="fa-solid fa-circle-xmark"></i></div>
-                        <h4 class="text-lg font-bold text-white">نقر مبكر جداً!</h4>
-                        <p class="text-xs text-gray-400">لقد نقرت قبل تحول اللون إلى الأخضر.</p>
-                        <button onclick="startReactionGame()" class="bg-emerald-600 text-white font-bold px-6 py-2 rounded-xl text-xs">إعادة المحاولة</button>
-                    </div>
-                `;
-            } else {
-                const ms = Date.now() - reactionStartTime;
-                reactionStartTime = 0;
-                const coinsEarned = ms < 250 ? 40 : ms < 350 ? 25 : 15;
-                addCoinsAndXP(coinsEarned, 20);
-
-                document.getElementById('modalGameBody').innerHTML = `
-                    <div class="space-y-4">
-                        <div class="text-4xl text-emerald-400"><i class="fa-solid fa-bolt"></i></div>
-                        <h4 class="text-xl font-bold text-white">زمن الاستجابة: <span class="text-emerald-400 font-black">${ms} ms</span></h4>
-                        <p class="text-xs text-gray-300">${ms < 250 ? 'سرعة استجابة خارقة ⚡' : 'أداء ممتاز 👏'}</p>
-                        <p class="text-sm text-amber-300 font-bold">+${coinsEarned} نقطة مكافأة!</p>
-                        <button onclick="startReactionGame()" class="bg-emerald-600 text-white font-bold px-6 py-2.5 rounded-xl text-xs">حاول مجدداً</button>
-                    </div>
-                `;
-            }
-        }
-
-        /* --- 4. COLOR MATCH GAME --- */
-        let colorScore = 0;
-        let currentColorMatch = false;
-
-        const colorsList = [
-            { name: "أحمر", color: "#ef4444" },
-            { name: "أزرق", color: "#3b82f6" },
-            { name: "أخضر", color: "#10b981" },
-            { name: "أصفر", color: "#eab308" }
-        ];
-
-        function startColorGame() {
-            colorScore = 0;
-            openGameModal("مطابقة الألوان والنصوص", `<i class="fa-solid fa-palette"></i>`, ``);
-            nextColorRound();
-        }
-
-        function nextColorRound() {
-            const wordObj = colorsList[Math.floor(Math.random() * colorsList.length)];
-            const visualObj = colorsList[Math.floor(Math.random() * colorsList.length)];
-            currentColorMatch = (wordObj.name === visualObj.name);
-
-            document.getElementById('modalGameBody').innerHTML = `
-                <div class="space-y-6 w-full max-w-sm mx-auto">
-                    <div class="text-xs text-gray-400 flex justify-between">
-                        <span>النقاط الحالية: <strong class="text-white">${colorScore}</strong></span>
-                        <span>هل يطابق الاسم اللون البصري؟</span>
-                    </div>
-
-                    <div class="bg-slate-900 border border-gray-800 py-8 rounded-2xl flex items-center justify-center">
-                        <span class="text-4xl font-black" style="color: ${visualObj.color}">${wordObj.name}</span>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <button onclick="answerColor(true)" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition-all">نعم (متطابق)</button>
-                        <button onclick="answerColor(false)" class="bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 rounded-xl transition-all">لا (غير متطابق)</button>
-                    </div>
-                </div>
-            `;
-        }
-
-        function answerColor(ans) {
-            if (ans === currentColorMatch) {
-                colorScore++;
-                if (colorScore >= 5) {
-                    addCoinsAndXP(35, 25);
-                    document.getElementById('modalGameBody').innerHTML = `
-                        <div class="space-y-4">
-                            <div class="text-4xl text-pink-400"><i class="fa-solid fa-trophy"></i></div>
-                            <h4 class="text-xl font-bold text-white">أحسنت! قوة تركيز عالية</h4>
-                            <p class="text-xs text-gray-300">أكملت 5 إجابات صحيحة متتالية.</p>
-                            <p class="text-sm text-amber-300 font-bold">+35 نقطة تمت إضافتها!</p>
-                            <button onclick="startColorGame()" class="bg-pink-600 text-white font-bold px-6 py-2.5 rounded-xl text-xs">لعبة جديدة</button>
-                        </div>
-                    `;
-                } else {
-                    nextColorRound();
-                }
-            } else {
-                document.getElementById('modalGameBody').innerHTML = `
-                    <div class="space-y-4">
-                        <div class="text-4xl text-rose-500"><i class="fa-solid fa-xmark"></i></div>
-                        <h4 class="text-lg font-bold text-white">إجابة خاطئة!</h4>
-                        <p class="text-xs text-gray-400">جمعت ${colorScore} إجابات صحيحة.</p>
-                        <button onclick="startColorGame()" class="bg-pink-600 text-white font-bold px-6 py-2.5 rounded-xl text-xs">محاولة جديدة</button>
-                    </div>
-                `;
-            }
-        }
-
-        /* --- 5. FAST MATH GAME --- */
-        let mathAns = 0;
-        let mathScore = 0;
-
-        function startMathGame() {
-            mathScore = 0;
-            openGameModal("تحدي الحساب السريع", `<i class="fa-solid fa-calculator"></i>`, ``);
-            nextMathQuestion();
-        }
-
-        function nextMathQuestion() {
-            const n1 = Math.floor(Math.random() * 20) + 1;
-            const n2 = Math.floor(Math.random() * 20) + 1;
-            const isPlus = Math.random() > 0.5;
-            mathAns = isPlus ? n1 + n2 : n1 - n2;
-
-            document.getElementById('modalGameBody').innerHTML = `
-                <div class="space-y-5 w-full max-w-sm mx-auto">
-                    <div class="text-xs text-gray-400">النتيجة الحالية: <strong class="text-amber-400 text-sm">${mathScore}</strong></div>
-                    <div class="bg-slate-900 border border-amber-500/30 py-6 rounded-2xl text-3xl font-black text-white">
-                        ${n1} ${isPlus ? '+' : '-'} ${n2} = ?
-                    </div>
-                    <div class="flex gap-2">
-                        <input type="number" id="mathInput" placeholder="أدخل الناتج..."
-                                class="flex-1 bg-slate-900 border border-gray-700 text-center text-white text-lg rounded-xl p-3 focus:outline-none focus:border-amber-500">
-                        <button onclick="submitMath()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-6 rounded-xl">إرسال</button>
-                    </div>
-                </div>
-            `;
-            setTimeout(() => {
-                const inp = document.getElementById('mathInput');
-                if (inp) {
-                    inp.focus();
-                    inp.onkeydown = (e) => { if(e.key === 'Enter') submitMath(); };
-                }
-            }, 50);
-        }
-
-        function submitMath() {
-            const inp = document.getElementById('mathInput');
-            if (!inp) return;
-            const userVal = parseInt(inp.value);
-
-            if (userVal === mathAns) {
-                mathScore++;
-                if (mathScore >= 5) {
-                    addCoinsAndXP(60, 30);
-                    document.getElementById('modalGameBody').innerHTML = `
-                        <div class="space-y-4">
-                            <div class="text-4xl text-amber-400"><i class="fa-solid fa-award"></i></div>
-                            <h4 class="text-xl font-bold text-white">عبقري رياضيات!</h4>
-                            <p class="text-xs text-gray-300">أجبت على 5 مسائل حسّابية بنجاح.</p>
-                            <p class="text-sm text-amber-300 font-bold">+60 نقطة مكافأة!</p>
-                            <button onclick="startMathGame()" class="bg-amber-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-xs">جولة جديدة</button>
-                        </div>
-                    `;
-                } else {
-                    nextMathQuestion();
-                }
-            } else {
-                document.getElementById('modalGameBody').innerHTML = `
-                    <div class="space-y-4">
-                        <div class="text-4xl text-rose-500"><i class="fa-solid fa-circle-xmark"></i></div>
-                        <h4 class="text-lg font-bold text-white">خطأ في الحساب!</h4>
-                        <p class="text-xs text-gray-400">الإجابة الصحيحة كانت: ${mathAns}</p>
-                        <button onclick="startMathGame()" class="bg-amber-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-xs">حاول مجدداً</button>
-                    </div>
-                `;
-            }
-        }
-
-        
-/* --- 6. MEMORY CARDS GAME --- */
+        /* --- 6. MEMORY CARDS GAME --- */
 const emojis = ['🚀', '🎮', '💎', '🔥', '🚀', '🎮', '💎', '🔥'];
 let flippedCards = [];
 let matchedCount = 0;
@@ -3137,13 +2935,7 @@ async function finishMemoryGame() {
         }
 
         const player = data.player;
-        state.coins = Number(player.coins);
-        state.xp = Number(player.xp);
-        state.level = Number(player.level);
-        state.gamesPlayed = Number(player.games_played);
-
-        saveUserDataLocally();
-        updateUI();
+        applyCloudPlayer(player);
         renderQuests();
 
         showToast("تمت إضافة مكافأة الذاكرة إلى حسابك!", "fa-solid fa-coins");
