@@ -2652,27 +2652,59 @@
         let clickerTimer = null;
         let clickerTimeLeft = 10;
 
-        function startClickerGame() {
-            clickerCount = 0;
-            clickerTimeLeft = 10;
-            clearInterval(clickerTimer);
+        async function startClickerGame() {
+    if (!currentUser) {
+        showToast("سجل الدخول أولاً!", "fa-solid fa-user");
+        return;
+    }
 
-            const body = `
-                <div class="space-y-6 w-full">
-                    <div class="flex justify-between items-center text-sm font-bold bg-slate-900 p-3 rounded-xl border border-gray-800">
-                        <span class="text-gray-400">الوقت المتبقي: <strong id="clickTimer" class="text-rose-400 text-lg">10</strong>s</span>
-                        <span class="text-purple-400">عدد النقرات: <strong id="clickCountDisplay" class="text-2xl text-white">0</strong></span>
-                    </div>
+    try {
+        const token = await currentUser.getIdToken();
 
-                    <button id="clickBtn" onclick="registerClick()" class="w-40 h-40 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 hover:scale-105 active:scale-95 text-white font-black text-2xl shadow-2xl glow-purple mx-auto flex items-center justify-center select-none transition-all cursor-pointer">
-                        انقر بسرعة!
-                    </button>
+        const response = await fetch(
+            "https://moataz-games-api.motazfaysel5.workers.dev/api/clicker/start",
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            }
+        );
 
-                    <p class="text-xs text-gray-400">انقر على الزر بأعلى سرعة قبل انقضاء الـ 10 ثوانٍ!</p>
-                </div>
-            `;
-            openGameModal("تحدي النقر السريع", `<i class="fa-solid fa-hand-pointer"></i>`, body);
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            showToast("تعذر بدء اللعبة، حاول مجدداً", "fa-solid fa-triangle-exclamation");
+            return;
         }
+
+        clickerSessionId = data.sessionId;
+        clickerCount = 0;
+        clickerTimeLeft = 10;
+        clearInterval(clickerTimer);
+        clickerTimer = null;
+
+        const body = `
+            <div class="space-y-6 w-full">
+                <div class="flex justify-between items-center text-sm font-bold bg-slate-900 p-3 rounded-xl border border-gray-800">
+                    <span class="text-gray-400">الوقت المتبقي: <strong id="clickTimer" class="text-rose-400 text-lg">10</strong>s</span>
+                    <span class="text-purple-400">عدد النقرات: <strong id="clickCountDisplay" class="text-2xl text-white">0</strong></span>
+                </div>
+
+                <button id="clickBtn" onclick="registerClick()" class="w-40 h-40 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 hover:scale-105 active:scale-95 text-white font-black text-2xl shadow-2xl glow-purple mx-auto flex items-center justify-center select-none transition-all cursor-pointer">
+                    انقر بسرعة!
+                </button>
+
+                <p class="text-xs text-gray-400">انقر على الزر بأعلى سرعة قبل انقضاء الـ 10 ثوانٍ!</p>
+            </div>
+        `;
+
+        openGameModal("تحدي النقر السريع", `<i class="fa-solid fa-hand-pointer"></i>`, body);
+
+    } catch (error) {
+        showToast("حدث خطأ في الاتصال", "fa-solid fa-wifi");
+    }
+}
 
         function registerClick() {
             if (clickerTimeLeft === 10 && !clickerTimer) {
