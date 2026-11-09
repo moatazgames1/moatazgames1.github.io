@@ -2728,20 +2728,76 @@
             }
         }
 
-        function finishClickerGame() {
-            const rewardCoins = Math.min(50, Math.floor(clickerCount * 0.8));
-            addCoinsAndXP(rewardCoins, 20);
+        async function finishClickerGame() {
+    const clicks = clickerCount;
+    const sessionId = clickerSessionId;
+    const rewardCoins = Math.min(50, Math.floor(clicks * 0.8));
 
-            document.getElementById('modalGameBody').innerHTML = `
-                <div class="space-y-4">
-                    <div class="text-4xl text-amber-400"><i class="fa-solid fa-trophy"></i></div>
-                    <h4 class="text-xl font-bold text-white">انتهى الوقت!</h4>
-                    <p class="text-sm text-gray-300">حققت <strong class="text-purple-400 text-lg">${clickerCount}</strong> نقرة في 10 ثوانٍ.</p>
-                    <p class="text-sm text-amber-300 font-bold">+${rewardCoins} نقطة تمت إضافتها لحسابك!</p>
-                    <button onclick="startClickerGame()" class="bg-purple-600 text-white font-bold px-6 py-2.5 rounded-xl text-xs">إعادة التحدي</button>
-                </div>
-            `;
+    clickerSessionId = null;
+
+    try {
+        if (!currentUser || !sessionId) {
+            throw new Error("جلسة اللعبة غير موجودة");
         }
+
+        const token = await currentUser.getIdToken();
+
+        const response = await fetch(
+            "https://moataz-games-api.motazfaysel5.workers.dev/api/clicker/finish",
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer " + token,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    sessionId: sessionId,
+                    clicks: clicks
+                })
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || "فشل استلام المكافأة");
+        }
+
+        const player = data.player;
+
+        state.coins = Number(player.coins);
+        state.xp = Number(player.xp);
+        state.level = Number(player.level);
+        state.gamesPlayed = Number(player.games_played);
+
+        saveUserDataLocally();
+        updateUI();
+        renderQuests();
+
+        showToast("تمت إضافة مكافأتك إلى حسابك السحابي!", "fa-solid fa-coins");
+
+        document.getElementById('modalGameBody').innerHTML = `
+            <div class="space-y-4">
+                <div class="text-4xl text-amber-400"><i class="fa-solid fa-trophy"></i></div>
+                <h4 class="text-xl font-bold text-white">انتهى الوقت!</h4>
+                <p class="text-sm text-gray-300">حققت <strong class="text-purple-400 text-lg">${clicks}</strong> نقرة في 10 ثوانٍ.</p>
+                <p class="text-sm text-amber-300 font-bold">+${data.rewardCoins ?? rewardCoins} نقطة أضيفت لحسابك!</p>
+                <button onclick="startClickerGame()" class="bg-purple-600 text-white font-bold px-6 py-2.5 rounded-xl text-xs">إعادة التحدي</button>
+            </div>
+        `;
+
+    } catch (error) {
+        console.error("Clicker reward error:", error);
+        document.getElementById('modalGameBody').innerHTML = `
+            <div class="space-y-4">
+                <h4 class="text-xl font-bold text-white">انتهى الوقت!</h4>
+                <p class="text-sm text-gray-300">حققت ${clicks} نقرة.</p>
+                <p class="text-sm text-rose-400">تعذر حفظ المكافأة. لا تعِد التحدي قبل التأكد من الرصيد.</p>
+                <button onclick="startClickerGame()" class="bg-purple-600 text-white font-bold px-6 py-2.5 rounded-xl text-xs">إعادة التحدي</button>
+            </div>
+        `;
+    }
+}
 
         /* --- 2. NUMBER GUESSING GAME --- */
         let targetNumber = 0;
