@@ -42,7 +42,7 @@
     <div class="card">
         <!-- قسم تسجيل الدخول / إنشاء حساب -->
         <div id="auth-section">
-            <h1 id="form-title">تسجيل الدخول إلى فوسيت معتز</h1>
+            <h1 id="form-title">تسجيل الدخول إلى فوسيت</h1>
             
             <div class="form-group">
                 <label>البريد الإلكتروني</label>
@@ -80,9 +80,9 @@
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // إعدادات مشروعك على Firebase
+        // إعدادات مشروعك الصحيحة على Firebase
         const firebaseConfig = {
-            apiKey: "AIzaSyD-1wdWJaf77xStVw4f3UuVqI-jB0",
+            apiKey: "AIzaSyD1wdWJaf77xStVw4f3UuVqI-jB0",
             authDomain: "moataz-games.firebaseapp.com",
             projectId: "moataz-games",
             storageBucket: "moataz-games.appspot.com",
@@ -99,7 +99,7 @@
 
         window.toggleMode = function() {
             isSignUp = !isSignUp;
-            document.getElementById('form-title').innerText = isSignUp ? "إنشاء حساب جديد" : "تسجيل الدخول إلى فوسيت معتز";
+            document.getElementById('form-title').innerText = isSignUp ? "إنشاء حساب جديد" : "تسجيل الدخول إلى فوسيت";
             document.getElementById('action-btn').innerText = isSignUp ? "تسجيل" : "دخول";
             document.getElementById('switch-mode-text').innerText = isSignUp ? "لديك حساب بالفعل؟ سجل الدخول" : "إنشاء حساب جديد";
         }
@@ -171,45 +171,4 @@
 
                 const docSnap = await getDoc(userRef);
                 if (docSnap.exists()) {
-                    document.getElementById('user-balance').innerText = docSnap.data().balance.toFixed(2);
-                }
-
-                alert(`مبروك! لقد ربحت ${earned} ساتوشي.`);
-                startTimer(300); 
-            } catch (e) {
-                alert("حدث خطأ أثناء حفظ الأرباح: " + e.message);
-            }
-        }
-
-        function startTimer(duration) {
-            let timer = duration, minutes, seconds;
-            let btn = document.getElementById('claimBtn');
-            let display = document.getElementById('timerDisplay');
-            
-            btn.style.opacity = "0.5";
-            btn.style.pointerEvents = "none";
-
-            let interval = setInterval(function () {
-                minutes = parseInt(timer / 60, 10);
-                seconds = parseInt(timer % 60, 10);
-
-                minutes = minutes < 10 ? "0" + minutes : minutes;
-                seconds = seconds < 10 ? "0" + seconds : seconds;
-
-                display.innerText = `انتظر: ${minutes}:${seconds} للمطالبة التالية`;
-
-                if (--timer < 0) {
-                    clearInterval(interval);
-                    btn.style.opacity = "1";
-                    btn.style.pointerEvents = "auto";
-                    display.innerText = "جاهز للنقر والربح!";
-                }
-            }, 1000);
-        }
-
-        window.logoutUser = function() {
-            signOut(auth);
-        }
-    </script>
-</body>
-</html>
+                    document.getElementById
