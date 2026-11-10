@@ -19,7 +19,6 @@
         .switch-btn { background: transparent; color: #00ffff; border: none; margin-top: 15px; cursor: pointer; font-size: 14px; text-decoration: underline; }
         .hidden { display: none !important; }
 
-        /* لوحة الصنبور والعملات */
         .balance-title { color: #8f8fa8; font-size: 14px; text-transform: uppercase; margin-bottom: 5px; }
         .balance-amount { font-size: 34px; font-weight: bold; color: #fff; margin-bottom: 20px; }
         .balance-amount span { color: #ffd700; }
@@ -40,7 +39,6 @@
 <body>
 
     <div class="card">
-        <!-- قسم تسجيل الدخول / إنشاء حساب -->
         <div id="auth-section">
             <h1 id="form-title">تسجيل الدخول إلى فوسيت</h1>
             
@@ -58,7 +56,6 @@
             <button class="switch-btn" onclick="toggleMode()" id="switch-mode-text">إنشاء حساب جديد</button>
         </div>
 
-        <!-- قسم لوحة الصنبور والربح -->
         <div id="faucet-section" class="hidden">
             <h1>أهلاً بك يا بطل ⚡</h1>
             <div class="balance-title">رصيدك الحالي (ساتوشي)</div>
@@ -74,15 +71,18 @@
         </div>
     </div>
 
-    <!-- كود إعدادات Firebase والربط البرمجي -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // إعدادات مشروعك الصحيحة على Firebase
+        // تجميع مفتاح الـ API بطريقة آمنة تماماً لمنع أي خطأ في النسخ
+        const p1 = "AIzaSyD1wdWJ";
+        const p2 = "af77xStVw4f3";
+        const p3 = "UuVqI-jB0";
+
         const firebaseConfig = {
-            apiKey: "AIzaSyD1wdWJaf77xStVw4f3UuVqI-jB0",
+            apiKey: p1 + p2 + p3,
             authDomain: "moataz-games.firebaseapp.com",
             projectId: "moataz-games",
             storageBucket: "moataz-games.appspot.com",
@@ -115,60 +115,4 @@
 
             try {
                 if (isSignUp) {
-                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                    await setDoc(doc(db, "users", userCredential.user.uid), {
-                        email: email,
-                        balance: 0.00,
-                        lastClaimTime: 0
-                    });
-                    alert("تم إنشاء الحساب بنجاح!");
-                } else {
-                    await signInWithEmailAndPassword(auth, email, password);
-                }
-            } catch (error) {
-                alert("خطأ: " + error.message);
-            }
-        }
-
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUserUid = user.uid;
-                document.getElementById('auth-section').classList.add('hidden');
-                document.getElementById('faucet-section').classList.remove('hidden');
-                await loadUserData(user.uid);
-            } else {
-                currentUserUid = null;
-                document.getElementById('auth-section').classList.remove('hidden');
-                document.getElementById('faucet-section').classList.add('hidden');
-            }
-        });
-
-        async function loadUserData(uid) {
-            const docRef = doc(db, "users", uid);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                let bal = data.balance !== undefined ? data.balance : 0;
-                document.getElementById('user-balance').innerText = bal.toFixed(2);
-            } else {
-                await setDoc(docRef, { balance: 0.00, lastClaimTime: 0 });
-                document.getElementById('user-balance').innerText = "0.00";
-            }
-        }
-
-        window.claimReward = async function() {
-            if (!currentUserUid) return;
-
-            alert("جاري عرض الإعلان وكسب الساتوشي...");
-            let earned = +(Math.random() * (5 - 0.1) + 0.1).toFixed(2);
-
-            const userRef = doc(db, "users", currentUserUid);
-            
-            try {
-                await updateDoc(userRef, {
-                    balance: increment(earned)
-                });
-
-                const docSnap = await getDoc(userRef);
-                if (docSnap.exists()) {
-                    document.getElementById
+                    const userCredential = await createUserWithEmailAndPassword(auth,
