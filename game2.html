@@ -3,81 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moataz Games - بوابة الألعاب والحسابات</title>
-    <!-- استدعاء خط عربي أنيق -->
+    <title>Moataz Faucet - ربح البيتكوين</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
         body { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #fff; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
-        .container { background: rgba(20, 20, 35, 0.9); border: 2px solid #ffd700; border-radius: 15px; padding: 30px; width: 100%; max-width: 450px; box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); }
-        h1 { text-align: center; color: #ffd700; margin-bottom: 20px; font-size: 24px; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: #ffaa00; font-weight: bold; }
-        input { width: 100%; padding: 12px; background: #0a0a16; border: 1px solid #444; border-radius: 8px; color: #fff; font-size: 16px; outline: none; transition: 0.3s; }
-        input:focus { border-color: #ffd700; box-shadow: 0 0 8px rgba(255,215,0,0.4); }
-        button { width: 100%; padding: 12px; background: linear-gradient(45deg, #ffd700, #ff8c00); border: none; border-radius: 8px; color: #000; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-        button:hover { opacity: 0.9; transform: scale(1.02); }
-        .switch-btn { background: transparent; color: #00ffff; border: none; margin-top: 15px; cursor: pointer; font-size: 14px; text-decoration: underline; width: 100%; text-align: center; }
+        .card { background: rgba(20, 20, 35, 0.95); border: 2px solid #ffd700; border-radius: 20px; padding: 30px; width: 100%; max-width: 420px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+        h1 { color: #ffd700; font-size: 24px; margin-bottom: 20px; text-shadow: 0 0 10px rgba(255,215,0,0.4); }
+        .form-group { margin-bottom: 15px; text-align: right; }
+        .form-group label { display: block; margin-bottom: 5px; color: #ffaa00; font-weight: bold; }
+        .form-group input { width: 100%; padding: 12px; background: #0a0a16; border: 1px solid #444; border-radius: 8px; color: #fff; font-size: 16px; outline: none; }
+        .form-group input:focus { border-color: #ffd700; box-shadow: 0 0 8px rgba(255,215,0,0.4); }
+        .btn { width: 100%; padding: 12px; background: linear-gradient(45deg, #ffd700, #ff8c00); border: none; border-radius: 8px; color: #000; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+        .btn:hover { opacity: 0.9; transform: scale(1.02); }
+        .switch-btn { background: transparent; color: #00ffff; border: none; margin-top: 15px; cursor: pointer; font-size: 14px; text-decoration: underline; }
         .hidden { display: none !important; }
-        .dashboard { text-align: center; }
-        .stats { background: rgba(0,0,0,0.5); padding: 15px; border-radius: 10px; margin: 20px 0; border: 1px dashed #ffd700; }
-        .logout-btn { background: linear-gradient(45deg, #ff416c, #ff4b2b); color: #fff; }
+
+        /* لوحة الصنبور والعملات */
+        .balance-title { color: #8f8fa8; font-size: 14px; text-transform: uppercase; margin-bottom: 5px; }
+        .balance-amount { font-size: 34px; font-weight: bold; color: #fff; margin-bottom: 20px; }
+        .balance-amount span { color: #ffd700; }
+        
+        .claim-btn {
+            width: 140px; height: 140px; background: linear-gradient(135deg, #ffd700, #ff8c00);
+            border-radius: 50%; border: none; outline: none; cursor: pointer;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            margin: 25px auto; box-shadow: 0 0 25px rgba(255, 215, 0, 0.4); transition: 0.2s;
+        }
+        .claim-btn:active { transform: scale(0.95); }
+        .claim-btn span { font-size: 40px; }
+        .claim-btn p { color: #000; font-weight: bold; font-size: 14px; margin-top: 5px; }
+        .timer-text { color: #00ffff; font-size: 15px; margin-top: 10px; font-weight: bold; }
+        .logout-btn { background: transparent; border: 1px solid #ff4444; color: #ff4444; margin-top: 20px; }
     </style>
 </head>
 <body>
 
-    <div class="container">
+    <div class="card">
         <!-- قسم تسجيل الدخول / إنشاء حساب -->
         <div id="auth-section">
-            <h1 id="form-title">تسجيل الدخول إلى Moataz Games</h1>
+            <h1 id="form-title">تسجيل الدخول إلى فوسيت معتز</h1>
             
-            <div id="name-group" class="form-group hidden">
-                <label>اسم اللاعب (البطل):</label>
-                <input type="text" id="displayName" placeholder="أدخل اسمك اللائق بالبطولة">
-            </div>
-
             <div class="form-group">
-                <label>البريد الإلكتروني:</label>
+                <label>البريد الإلكتروني</label>
                 <input type="email" id="email" placeholder="name@example.com">
             </div>
-
+            
             <div class="form-group">
-                <label>كلمة المرور:</label>
-                <input type="password" id="password" placeholder="••••••••">
+                <label>كلمة المرور</label>
+                <input type="password" id="password" placeholder="********">
             </div>
 
-            <button id="action-btn" onclick="handleAuth()">دخول</button>
-            <button class="switch-btn" onclick="toggleMode()" id="switch-mode-text">ليس لديك حساب؟ إنشاء حساب جديد</button>
+            <button class="btn" id="action-btn" onclick="handleAuth()">دخول</button>
+            <button class="switch-btn" onclick="toggleMode()" id="switch-mode-text">إنشاء حساب جديد</button>
         </div>
 
-        <!-- قسم لوحة تحكم اللاعب (داخل اللعبة) -->
-        <div id="game-dashboard" class="dashboard hidden">
-            <h1>أهلاً بك يا <span id="user-welcome" style="color: #ffd700;"></span></h1>
-            
-            <div class="stats">
-                <p>نقاطك الحالية: <span id="user-score" style="color: #00ffff; font-size: 22px; font-weight: bold;">0</span> نقطة</p>
-            </div>
+        <!-- قسم لوحة الصنبور والربح -->
+        <div id="faucet-section" class="hidden">
+            <h1>أهلاً بك يا بطل ⚡</h1>
+            <div class="balance-title">رصيدك الحالي (ساتوشي)</div>
+            <div class="balance-amount"><span id="user-balance">0.00</span> Coins</div>
 
-            <button onclick="addPoints()">اضغط لجمع النقاط! 🎮</button>
-            <button class="logout-btn" onclick="logoutUser()">تسجيل الخروج</button>
+            <button class="claim-btn" id="claimBtn" onclick="claimReward()">
+                <span>⚡</span>
+                <p>Claim</p>
+            </button>
+
+            <div class="timer-text" id="timerDisplay">جاهز للنقر والربح!</div>
+            <button class="btn logout-btn" onclick="logoutUser()">تسجيل الخروج</button>
         </div>
     </div>
 
-    <!-- سكربت Firebase والربط البرمجي -->
+    <!-- كود إعدادات Firebase والربط البرمجي -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // مفاتيح مشروعك الحقيقية التي استخرجناها من Firebase
+        // إعدادات مشروعك على Firebase
         const firebaseConfig = {
-            apiKey: "AIzaSyBhOd-HVNhV-lZLidQ40APa22VWOSWobUg",
+            apiKey: "AIzaSyD-1wdWJaf77xStVw4f3UuVqI-jB0",
             authDomain: "moataz-games.firebaseapp.com",
             projectId: "moataz-games",
-            storageBucket: "moataz-games.firebasestorage.app",
-            messagingSenderId: "222265858444",
-            appId: "1:222265858444:web:12a81f336edbff05f59ea9",
-            measurementId: "G-XZJ5BTEQC0"
+            storageBucket: "moataz-games.appspot.com",
+            messagingSenderId: "338870344560",
+            appId: "1:338870344560:web:8d6d6a169bdfa14"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -85,91 +95,121 @@
         const db = getFirestore(app);
 
         let isSignUp = false;
+        let currentUserUid = null;
 
         window.toggleMode = function() {
             isSignUp = !isSignUp;
-            document.getElementById('form-title').innerText = isSignUp ? "إنشاء حساب جديد في Moataz Games" : "تسجيل الدخول إلى Moataz Games";
-            document.getElementById('action-btn').innerText = isSignUp ? "إنشاء الحساب" : "دخول";
-            document.getElementById('switch-mode-text').innerText = isSignUp ? "لديك حساب بالفعل؟ تسجيل الدخول" : "ليس لديك حساب؟ إنشاء حساب جديد";
-            document.getElementById('name-group').classList.toggle('hidden', !isSignUp);
-        };
+            document.getElementById('form-title').innerText = isSignUp ? "إنشاء حساب جديد" : "تسجيل الدخول إلى فوسيت معتز";
+            document.getElementById('action-btn').innerText = isSignUp ? "تسجيل" : "دخول";
+            document.getElementById('switch-mode-text').innerText = isSignUp ? "لديك حساب بالفعل؟ سجل الدخول" : "إنشاء حساب جديد";
+        }
 
         window.handleAuth = async function() {
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value.trim();
-            const displayName = document.getElementById('displayName').value.trim();
-
-            if (!email || !password) {
-                alert("الرجاء ملء جميع الحقول المطلوبة!");
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if(!email || !password) {
+                alert("الرجاء إدخال البريد وكلمة المرور!");
                 return;
             }
 
             try {
                 if (isSignUp) {
-                    if (!displayName) {
-                        alert("الرجاء إدخال اسم اللاعب!");
-                        return;
-                    }
                     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                    const user = userCredential.user;
-                    
-                    // حفظ بيانات البطل في قاعدة البيانات Firestore
-                    await setDoc(doc(db, "users", user.uid), {
-                        uid: user.uid,
+                    await setDoc(doc(db, "users", userCredential.user.uid), {
                         email: email,
-                        displayName: displayName,
-                        score: 0,
-                        updatedAt: new Date()
+                        balance: 0.00,
+                        lastClaimTime: 0
                     });
-                    alert("تم إنشاء الحساب بنجاح يا بطل!");
+                    alert("تم إنشاء الحساب بنجاح!");
                 } else {
                     await signInWithEmailAndPassword(auth, email, password);
                 }
             } catch (error) {
                 alert("خطأ: " + error.message);
             }
-        };
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserUid = user.uid;
+                document.getElementById('auth-section').classList.add('hidden');
+                document.getElementById('faucet-section').classList.remove('hidden');
+                await loadUserData(user.uid);
+            } else {
+                currentUserUid = null;
+                document.getElementById('auth-section').classList.remove('hidden');
+                document.getElementById('faucet-section').classList.add('hidden');
+            }
+        });
+
+        async function loadUserData(uid) {
+            const docRef = doc(db, "users", uid);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                let bal = data.balance !== undefined ? data.balance : 0;
+                document.getElementById('user-balance').innerText = bal.toFixed(2);
+            } else {
+                await setDoc(docRef, { balance: 0.00, lastClaimTime: 0 });
+                document.getElementById('user-balance').innerText = "0.00";
+            }
+        }
+
+        window.claimReward = async function() {
+            if (!currentUserUid) return;
+
+            alert("جاري عرض الإعلان وكسب الساتوشي...");
+            let earned = +(Math.random() * (5 - 0.1) + 0.1).toFixed(2);
+
+            const userRef = doc(db, "users", currentUserUid);
+            
+            try {
+                await updateDoc(userRef, {
+                    balance: increment(earned)
+                });
+
+                const docSnap = await getDoc(userRef);
+                if (docSnap.exists()) {
+                    document.getElementById('user-balance').innerText = docSnap.data().balance.toFixed(2);
+                }
+
+                alert(`مبروك! لقد ربحت ${earned} ساتوشي.`);
+                startTimer(300); 
+            } catch (e) {
+                alert("حدث خطأ أثناء حفظ الأرباح: " + e.message);
+            }
+        }
+
+        function startTimer(duration) {
+            let timer = duration, minutes, seconds;
+            let btn = document.getElementById('claimBtn');
+            let display = document.getElementById('timerDisplay');
+            
+            btn.style.opacity = "0.5";
+            btn.style.pointerEvents = "none";
+
+            let interval = setInterval(function () {
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                display.innerText = `انتظر: ${minutes}:${seconds} للمطالبة التالية`;
+
+                if (--timer < 0) {
+                    clearInterval(interval);
+                    btn.style.opacity = "1";
+                    btn.style.pointerEvents = "auto";
+                    display.innerText = "جاهز للنقر والربح!";
+                }
+            }, 1000);
+        }
 
         window.logoutUser = function() {
             signOut(auth);
-        };
-
-        window.addPoints = async function() {
-            const user = auth.currentUser;
-            if (!user) return;
-            const userRef = doc(db, "users", user.uid);
-            try {
-                await updateDoc(userRef, {
-                    score: increment(10),
-                    updatedAt: new Date()
-                });
-                alert("رائع! تمت إضافة 10 نقاط إلى رصيدك بنجاح.");
-            } catch (e) {
-                console.error(e);
-            }
-        };
-
-        // مراقبة حالة تسجيل الدخول لتحديث الواجهة وعرض النقاط
-        onAuthStateChanged(auth, async (user) => {
-            const authSection = document.getElementById('auth-section');
-            const gameDashboard = document.getElementById('game-dashboard');
-            
-            if (user) {
-                authSection.classList.add('hidden');
-                gameDashboard.classList.remove('hidden');
-
-                // جلب بيانات اللاعب والنقاط من قاعدة البيانات
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                if (userDoc.exists()) {
-                    const data = userDoc.data();
-                    document.getElementById('user-welcome').innerText = data.displayName || "البطل";
-                    document.getElementById('user-score').innerText = data.score || 0;
-                }
-            } else {
-                authSection.classList.remove('hidden');
-                gameDashboard.classList.add('hidden');
-            }
-        });
+        }
     </script>
 </body>
 </html>
